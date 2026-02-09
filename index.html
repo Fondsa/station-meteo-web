@@ -2,22 +2,146 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Station météo</title>
+  <title>Station Météo</title>
+  <style>
+    :root {
+      --bg-color: #fff3e0;
+      --text-color: #ff6f00;
+      --card-bg: #ffe082;
+      --btn-bg: #ffb74d;
+      --btn-text: #fff;
+    }
+
+    body.night {
+      --bg-color: #2c2c2c;
+      --text-color: #ffcc80;
+      --card-bg: #424242;
+      --btn-bg: #ff9800;
+      --btn-text: #000;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 10px 0;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn {
+      background-color: var(--btn-bg);
+      color: var(--btn-text);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      transition: transform 0.1s;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    #mode-btn {
+      margin-top: 30px;
+      background-color: #ffcc00;
+      color: #000;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Station météo</h1>
+  <h1>Station Météo</h1>
 
-<h2>Capteurs</h2>
-<p>Extérieur : <span id="temp-ext">--</span> °C</p>
-<p>Intérieur : <span id="temp-int">--</span> °C</p>
+  <div class="card">
+    <h2>Capteurs</h2>
+    <p>Extérieur : <span id="temp-ext">--</span> °C</p>
+    <p>Intérieur : <span id="temp-int">--</span> °C</p>
+  </div>
 
-<h2>Lampe extérieure</h2>
-<button id="btn-lampe">Allumer</button>
+  <div class="card">
+    <h2>Lampe Extérieure</h2>
+    <button id="btn-lampe" class="btn">Allumer</button>
+  </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="app.js"></script>
+  <button id="mode-btn" class="btn">Mode Nuit</button>
+
+  <!-- Firebase SDK Modulaire -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
+      authDomain: "projetfakirradio.firebaseapp.com",
+      databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "projetfakirradio",
+      storageBucket: "projetfakirradio.firebasestorage.app",
+      messagingSenderId: "363899261538",
+      appId: "1:363899261538:web:ad30da02b1485f5c2d373b",
+      measurementId: "G-EZL8K5CS4Y"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Références BDD
+    const tempExtRef = ref(db, "capteurs/exterieur/temperature");
+    const tempIntRef = ref(db, "capteurs/interieur/temperature");
+    const lampeRef = ref(db, "commande/lampe");
+
+    // Lecture temps réel
+    onValue(tempExtRef, (snap) => {
+      document.getElementById("temp-ext").textContent = snap.val();
+    });
+
+    onValue(tempIntRef, (snap) => {
+      document.getElementById("temp-int").textContent = snap.val();
+    });
+
+    const btn = document.getElementById("btn-lampe");
+
+    // Etat initial lampe
+    onValue(lampeRef, (snap) => {
+      btn.textContent = snap.val() ? "Éteindre" : "Allumer";
+    });
+
+    // Action bouton lampe
+    btn.addEventListener("click", async () => {
+      const snap = await get(lampeRef);
+      set(lampeRef, !snap.val());
+    });
+
+    // Mode Jour/Nuit
+    const modeBtn = document.getElementById("mode-btn");
+    modeBtn.addEventListener("click", () => {
+      document.body.classList.toggle("night");
+      if(document.body.classList.contains("night")) {
+        modeBtn.textContent = "Mode Jour";
+      } else {
+        modeBtn.textContent = "Mode Nuit";
+      }
+    });
+  </script>
 
 </body>
 </html>
