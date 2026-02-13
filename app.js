@@ -25,10 +25,10 @@ const modeRef = ref(db, "ui/mode");
 
 // 🔹 Températures en temps réel
 onValue(tempExtRef, snap => {
-  document.getElementById("temp-ext").textContent = snap.val();
+  document.getElementById("temp-ext").textContent = snap.val() ?? "--";
 });
 onValue(tempIntRef, snap => {
-  document.getElementById("temp-int").textContent = snap.val();
+  document.getElementById("temp-int").textContent = snap.val() ?? "--";
 });
 
 // 🔹 Lampe
