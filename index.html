@@ -132,16 +132,23 @@
     // 🔹 Mode Jour/Nuit persistant
     const modeBtn = document.getElementById("mode-btn");
 
+    // Lecture initiale depuis Firebase
     onValue(modeRef, snap => {
       const mode = snap.val() || "jour";
       document.body.className = mode === "jour" ? "" : "night";
       modeBtn.textContent = mode === "jour" ? "Mode Nuit" : "Mode Jour";
     });
 
+    // Bascule et mise à jour Firebase
     modeBtn.addEventListener("click", async () => {
       const snap = await get(modeRef);
-      const newMode = snap.val() === "jour" ? "night" : "jour";
+      const currentMode = snap.val() || "jour";
+      const newMode = currentMode === "jour" ? "night" : "jour";
+
+      // Sauvegarde du mode
       set(modeRef, newMode);
+
+      // Mise à jour immédiate du style
       document.body.className = newMode === "jour" ? "" : "night";
       modeBtn.textContent = newMode === "jour" ? "Mode Nuit" : "Mode Jour";
     });
