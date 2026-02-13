@@ -43,3 +43,22 @@ btn.addEventListener("click", async () => {
   const snap = await get(lampeRef);
   set(lampeRef, !snap.val());
 });
+
+// Mise en mémoire du mode jour/nuit
+const db = getDatabase(app);
+const modeRef = ref(db, "ui/mode");
+const btnMode = document.getElementById("btn-mode");
+
+// 🔹 Lecture du mode au chargement
+onValue(modeRef, (snapshot) => {
+  const mode = snapshot.val();
+  document.body.className = mode; // suppose que tu as .jour et .nuit dans CSS
+  btnMode.textContent = mode === "jour" ? "Passer en nuit" : "Passer en jour";
+});
+
+// 🔹 Changement du mode
+btnMode.addEventListener("click", async () => {
+  const snap = await get(modeRef);
+  const newMode = snap.val() === "jour" ? "nuit" : "jour";
+  set(modeRef, newMode);
+});
