@@ -29,6 +29,7 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
     }
 
     h1 {
@@ -104,44 +105,47 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Références BDD
+    // 🔹 Références BDD
     const tempExtRef = ref(db, "capteurs/exterieur/temperature");
     const tempIntRef = ref(db, "capteurs/interieur/temperature");
     const lampeRef = ref(db, "commande/lampe");
+    const modeRef = ref(db, "ui/mode");
 
-    // Lecture temps réel
-    onValue(tempExtRef, (snap) => {
+    // 🔹 Températures en temps réel
+    onValue(tempExtRef, snap => {
       document.getElementById("temp-ext").textContent = snap.val();
     });
-
-    onValue(tempIntRef, (snap) => {
+    onValue(tempIntRef, snap => {
       document.getElementById("temp-int").textContent = snap.val();
     });
 
-    const btn = document.getElementById("btn-lampe");
-
-    // Etat initial lampe
-    onValue(lampeRef, (snap) => {
-      btn.textContent = snap.val() ? "Éteindre" : "Allumer";
+    // 🔹 Bouton lampe
+    const btnLampe = document.getElementById("btn-lampe");
+    onValue(lampeRef, snap => {
+      btnLampe.textContent = snap.val() ? "Éteindre" : "Allumer";
     });
-
-    // Action bouton lampe
-    btn.addEventListener("click", async () => {
+    btnLampe.addEventListener("click", async () => {
       const snap = await get(lampeRef);
       set(lampeRef, !snap.val());
     });
 
-    // Mode Jour/Nuit
+    // 🔹 Mode Jour/Nuit persistant
     const modeBtn = document.getElementById("mode-btn");
-    modeBtn.addEventListener("click", () => {
-      document.body.classList.toggle("night");
-      if(document.body.classList.contains("night")) {
-        modeBtn.textContent = "Mode Jour";
-      } else {
-        modeBtn.textContent = "Mode Nuit";
-      }
-    });
-  </script>
 
+    onValue(modeRef, snap => {
+      const mode = snap.val() || "jour";
+      document.body.className = mode === "jour" ? "" : "night";
+      modeBtn.textContent = mode === "jour" ? "Mode Nuit" : "Mode Jour";
+    });
+
+    modeBtn.addEventListener("click", async () => {
+      const snap = await get(modeRef);
+      const newMode = snap.val() === "jour" ? "night" : "jour";
+      set(modeRef, newMode);
+      document.body.className = newMode === "jour" ? "" : "night";
+      modeBtn.textContent = newMode === "jour" ? "Mode Nuit" : "Mode Jour";
+    });
+
+  </script>
 </body>
 </html>
