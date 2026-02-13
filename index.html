@@ -22,8 +22,6 @@
   <button id="btn-lampe">Allumer</button>
 </div>
 
-<button id="mode-btn">Mode Nuit</button>
-
 <!-- Firebase CDN compat -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -47,10 +45,8 @@
   const tempIntRef = db.ref("capteurs/interieur/temperature");
   const humIntRef  = db.ref("capteurs/interieur/humidite");
   const lampeRef   = db.ref("commande/lampe");
-  const modeRef    = db.ref("ui/mode"); // false = jour, true = nuit
 
   const btnLampe = document.getElementById("btn-lampe");
-  const modeBtn  = document.getElementById("mode-btn");
 
   // 🔹 Lecture temps réel capteurs
   tempExtRef.on("value", snap => document.getElementById("temp-ext").textContent = snap.val() ?? "--");
@@ -63,21 +59,6 @@
   btnLampe.addEventListener("click", async () => {
     const snap = await lampeRef.once("value");
     lampeRef.set(!snap.val());
-  });
-
-  // 🔹 Mode jour/nuit persistant
-  modeRef.on("value", snap => {
-    const nuit = snap.val() === true;
-    document.body.className = nuit ? "nuit" : "jour";
-    modeBtn.textContent = nuit ? "Mode Jour" : "Mode Nuit";
-  });
-
-  modeBtn.addEventListener("click", async () => {
-    const snap = await modeRef.once("value");
-    const nouvelleValeur = !(snap.val() === true);
-    modeRef.set(nouvelleValeur);
-    document.body.className = nouvelleValeur ? "nuit" : "jour";
-    modeBtn.textContent = nouvelleValeur ? "Mode Jour" : "Mode Nuit";
   });
 </script>
 
