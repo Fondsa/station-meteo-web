@@ -7,23 +7,73 @@
 </head>
 <body>
 
-  <h1>Station Météo</h1>
+<h1>Station Météo</h1>
 
-  <div class="card">
-    <h2>Capteurs</h2>
-    <p>Extérieur : <span id="temp-ext">--</span> °C</p>
-    <p>Intérieur : <span id="temp-int">--</span> °C</p>
-  </div>
+<div class="card">
+  <h2>Capteurs</h2>
+  <p>Extérieur : <span id="temp-ext">--</span> °C</p>
+  <p>Intérieur : <span id="temp-int">--</span> °C</p>
+</div>
 
-  <div class="card">
-    <h2>Lampe Extérieure</h2>
-    <button id="btn-lampe" class="btn">Allumer</button>
-  </div>
+<div class="card">
+  <h2>Lampe Extérieure</h2>
+  <button id="btn-lampe" class="btn">Allumer</button>
+</div>
 
-  <button id="mode-btn" class="btn">Mode Nuit</button>
+<button id="mode-btn" class="btn">Mode Nuit</button>
 
-  <!-- JS externe chargé après le DOM -->
-  <script type="module" src="App.js"></script>
+<!-- Firebase via CDN compat -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  // 🔹 Initialisation Firebase
+  const firebaseConfig = {
+    apiKey: "TA_CLE_API", // change si nécessaire
+    authDomain: "projetfakirradio.firebaseapp.com",
+    databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "projetfakirradio",
+    storageBucket: "projetfakirradio.firebasestorage.app",
+    messagingSenderId: "363899261538",
+    appId: "1:363899261538:web:ad30da02b1485f5c2d373b",
+    measurementId: "G-EZL8K5CS4Y"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const tempExtRef = db.ref("capteurs/exterieur/temperature");
+  const tempIntRef = db.ref("capteurs/interieur/temperature");
+  const lampeRef = db.ref("commande/lampe");
+  const modeRef = db.ref("ui/mode");
+
+  const btnLampe = document.getElementById("btn-lampe");
+  const modeBtn = document.getElementById("mode-btn");
+
+  // 🔹 Températures
+  tempExtRef.on("value", snap => document.getElementById("temp-ext").textContent = snap.val() ?? "--");
+  tempIntRef.on("value", snap => document.getElementById("temp-int").textContent = snap.val() ?? "--");
+
+  // 🔹 Lampe
+  lampeRef.on("value", snap => btnLampe.textContent = snap.val() ? "Éteindre" : "Allumer");
+  btnLampe.addEventListener("click", async () => {
+    const snap = await lampeRef.once("value");
+    lampeRef.set(!snap.val());
+  });
+
+  // 🔹 Mode Jour/Nuit persistant
+  modeRef.on("value", snap => {
+    const mode = snap.val() || "jour";
+    document.body.className = mode;
+    modeBtn.textContent = mode === "jour" ? "Mode Nuit" : "Mode Jour";
+  });
+
+  modeBtn.addEventListener("click", async () => {
+    const snap = await modeRef.once("value");
+    const newMode = snap.val() === "jour" ? "nuit" : "jour";
+    modeRef.set(newMode);
+    document.body.className = newMode;
+    modeBtn.textContent = newMode === "jour" ? "Mode Nuit" : "Mode Jour";
+  });
+</script>
 
 </body>
 </html>
