@@ -3,71 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Station Météo</title>
-  <style>
-    :root {
-      --bg-color: #fff3e0;
-      --text-color: #ff6f00;
-      --card-bg: #ffe082;
-      --btn-bg: #ffb74d;
-      --btn-text: #fff;
-    }
-
-    body.night {
-      --bg-color: #2c2c2c;
-      --text-color: #ffcc80;
-      --card-bg: #424242;
-      --btn-bg: #ff9800;
-      --btn-text: #000;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      transition: background-color 0.3s, color 0.3s;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      padding: 20px;
-      border-radius: 12px;
-      margin: 10px 0;
-      width: 300px;
-      text-align: center;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-
-    .btn {
-      background-color: var(--btn-bg);
-      color: var(--btn-text);
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
-      transition: transform 0.1s;
-    }
-
-    .btn:hover {
-      transform: scale(1.05);
-    }
-
-    #mode-btn {
-      margin-top: 30px;
-      background-color: #ffcc00;
-      color: #000;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -86,73 +22,8 @@
 
   <button id="mode-btn" class="btn">Mode Nuit</button>
 
-  <!-- Firebase SDK Modulaire -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  <!-- JS externe chargé **après** le DOM -->
+  <script type="module" src="App.js"></script>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
-      authDomain: "projetfakirradio.firebaseapp.com",
-      databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "projetfakirradio",
-      storageBucket: "projetfakirradio.firebasestorage.app",
-      messagingSenderId: "363899261538",
-      appId: "1:363899261538:web:ad30da02b1485f5c2d373b",
-      measurementId: "G-EZL8K5CS4Y"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // 🔹 Références BDD
-    const tempExtRef = ref(db, "capteurs/exterieur/temperature");
-    const tempIntRef = ref(db, "capteurs/interieur/temperature");
-    const lampeRef = ref(db, "commande/lampe");
-    const modeRef = ref(db, "ui/mode");
-
-    // 🔹 Températures en temps réel
-    onValue(tempExtRef, snap => {
-      document.getElementById("temp-ext").textContent = snap.val();
-    });
-    onValue(tempIntRef, snap => {
-      document.getElementById("temp-int").textContent = snap.val();
-    });
-
-    // 🔹 Bouton lampe
-    const btnLampe = document.getElementById("btn-lampe");
-    onValue(lampeRef, snap => {
-      btnLampe.textContent = snap.val() ? "Éteindre" : "Allumer";
-    });
-    btnLampe.addEventListener("click", async () => {
-      const snap = await get(lampeRef);
-      set(lampeRef, !snap.val());
-    });
-
-    // 🔹 Mode Jour/Nuit persistant
-    const modeBtn = document.getElementById("mode-btn");
-
-    // Lecture initiale depuis Firebase
-    onValue(modeRef, snap => {
-      const mode = snap.val() || "jour";
-      document.body.className = mode === "jour" ? "" : "night";
-      modeBtn.textContent = mode === "jour" ? "Mode Nuit" : "Mode Jour";
-    });
-
-    // Bascule et mise à jour Firebase
-    modeBtn.addEventListener("click", async () => {
-      const snap = await get(modeRef);
-      const currentMode = snap.val() || "jour";
-      const newMode = currentMode === "jour" ? "night" : "jour";
-
-      // Sauvegarde du mode
-      set(modeRef, newMode);
-
-      // Mise à jour immédiate du style
-      document.body.className = newMode === "jour" ? "" : "night";
-      modeBtn.textContent = newMode === "jour" ? "Mode Nuit" : "Mode Jour";
-    });
-
-  </script>
 </body>
 </html>
