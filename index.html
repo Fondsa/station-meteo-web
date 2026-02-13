@@ -54,12 +54,7 @@
   tempIntRef.on("value", snap => document.getElementById("temp-int").textContent = snap.val() ?? "--");
   humIntRef.on("value", snap => document.getElementById("hum-int").textContent = snap.val() ?? "--");
 
-  // 🔹 Lampe
-  lampeRef.on("value", snap => btnLampe.textContent = snap.val() ? "Éteindre" : "Allumer");
-  btnLampe.addEventListener("click", async () => {
-    const snap = await lampeRef.once("value");
-    lampeRef.set(!snap.val());
-  });
+
 </script>
 
 </body>
