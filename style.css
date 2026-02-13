@@ -3,37 +3,78 @@
 /* Styles généraux */
 body {
   font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Mode jour */
+/* Mode Jour */
 body.jour {
-  background-color: #fff7e6; /* fond clair */
-  color: #ff8800; /* texte orange */
+  background-color: #fff3e0;
+  color: #ff6f00;
 }
 
-/* Mode nuit */
+/* Mode Nuit */
 body.nuit {
-  background-color: #222222; /* fond sombre */
-  color: #ffcc33; /* texte jaune */
+  background-color: #2c2c2c;
+  color: #ffcc80;
 }
 
-/* Exemple pour bouton */
-button {
-  padding: 10px 20px;
+/* Cartes */
+.card {
+  width: 300px;
+  background-color: #ffe082;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 10px 0;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Boutons */
+.btn {
   border: none;
-  border-radius: 6px;
-  font-size: 16px;
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
-  margin: 5px;
+  font-size: 16px;
+  margin-top: 10px;
+  transition: transform 0.1s, background-color 0.3s, color 0.3s;
 }
 
-button#btn-lampe {
+.btn:hover {
+  transform: scale(1.05);
+}
+
+/* Bouton spécifique lampe */
+#btn-lampe {
   background-color: #ff8800;
   color: #fff;
 }
 
-button#btn-mode {
-  background-color: #ffcc33;
-  color: #222;
+/* Bouton mode */
+#mode-btn {
+  margin-top: 30px;
+  background-color: #ffcc00;
+  color: #000;
+}
+
+/* Mode Nuit cartes et boutons */
+body.nuit .card {
+  background-color: #424242;
+  color: #ffcc80;
+}
+
+body.nuit #btn-lampe {
+  background-color: #ff9800;
+  color: #000;
+}
+
+body.nuit #mode-btn {
+  background-color: #ffcc00;
+  color: #000;
 }
