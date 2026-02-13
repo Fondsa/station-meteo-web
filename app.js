@@ -4,7 +4,7 @@ import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/fir
 
 // 🔹 Initialisation Firebase
 const firebaseConfig = {
-  apiKey: "",
+  apiKey: apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
   authDomain: "projetfakirradio.firebaseapp.com",
   databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "projetfakirradio",
