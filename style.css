@@ -2,43 +2,53 @@
 
 /* Styles généraux */
 body {
-  font-family: Arial, sans-serif;
   margin: 0;
-  padding: 20px;
+  font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 20px;
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Mode Jour */
+/* Mode jour */
 body.jour {
-  background-color: #fff3e0;
-  color: #ff6f00;
+  background-color: #fff7e6;
+  color: #ff8800;
 }
 
-/* Mode Nuit */
+/* Mode nuit */
 body.nuit {
-  background-color: #2c2c2c;
-  color: #ffcc80;
+  background-color: #222222;
+  color: #ffcc33;
+}
+
+/* Titres */
+h1 {
+  margin-bottom: 20px;
 }
 
 /* Cartes */
 .card {
-  width: 300px;
   background-color: #ffe082;
   padding: 20px;
   border-radius: 12px;
   margin: 10px 0;
+  width: 300px;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  transition: background-color 0.3s, color 0.3s;
+  transition: background-color 0.3s;
+}
+
+/* Mode nuit cartes */
+body.nuit .card {
+  background-color: #424242;
 }
 
 /* Boutons */
-.btn {
-  border: none;
+button {
   padding: 12px 24px;
+  border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
@@ -46,27 +56,14 @@ body.nuit {
   transition: transform 0.1s, background-color 0.3s, color 0.3s;
 }
 
-.btn:hover {
+button:hover {
   transform: scale(1.05);
 }
 
-/* Bouton spécifique lampe */
+/* Bouton lampe */
 #btn-lampe {
   background-color: #ff8800;
   color: #fff;
-}
-
-/* Bouton mode */
-#mode-btn {
-  margin-top: 30px;
-  background-color: #ffcc00;
-  color: #000;
-}
-
-/* Mode Nuit cartes et boutons */
-body.nuit .card {
-  background-color: #424242;
-  color: #ffcc80;
 }
 
 body.nuit #btn-lampe {
@@ -74,7 +71,8 @@ body.nuit #btn-lampe {
   color: #000;
 }
 
-body.nuit #mode-btn {
+/* Bouton mode jour/nuit */
+#mode-btn {
   background-color: #ffcc00;
-  color: #000;
+  color: #222;
 }
