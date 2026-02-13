@@ -67,14 +67,14 @@
 
   // 🔹 Mode jour/nuit persistant
   modeRef.on("value", snap => {
-    const nuit = snap.val() === true; // true = nuit
+    const nuit = snap.val() === true;
     document.body.className = nuit ? "nuit" : "jour";
     modeBtn.textContent = nuit ? "Mode Jour" : "Mode Nuit";
   });
 
   modeBtn.addEventListener("click", async () => {
     const snap = await modeRef.once("value");
-    const nouvelleValeur = !(snap.val() === true); // toggle
+    const nouvelleValeur = !(snap.val() === true);
     modeRef.set(nouvelleValeur);
     document.body.className = nouvelleValeur ? "nuit" : "jour";
     modeBtn.textContent = nouvelleValeur ? "Mode Jour" : "Mode Nuit";
