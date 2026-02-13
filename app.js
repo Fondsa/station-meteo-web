@@ -44,7 +44,7 @@ btnLampe.addEventListener("click", async () => {
 // 🔹 Mode Jour/Nuit persistant
 const modeBtn = document.getElementById("mode-btn");
 
-// Lecture initiale
+// Lecture initiale depuis Firebase
 onValue(modeRef, snap => {
   const mode = snap.val() || "jour";
   document.body.className = mode;
