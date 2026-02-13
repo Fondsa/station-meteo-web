@@ -28,7 +28,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-  // 🔹 Initialisation Firebase
   const firebaseConfig = {
     apiKey: "TA_CLE_API", // remplace par ta clé
     authDomain: "projetfakirradio.firebaseapp.com",
@@ -43,7 +42,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // 🔹 Références BDD
   const tempExtRef = db.ref("capteurs/exterieur/temperature");
   const humExtRef  = db.ref("capteurs/exterieur/humidite");
   const tempIntRef = db.ref("capteurs/interieur/temperature");
@@ -67,19 +65,19 @@
     lampeRef.set(!snap.val());
   });
 
-  // 🔹 Mode Jour/Nuit persistant
+  // 🔹 Mode jour/nuit persistant
   modeRef.on("value", snap => {
-    const mode = snap.val() ? "nuit" : "jour";
-    document.body.className = mode;
-    modeBtn.textContent = mode === "jour" ? "Mode Nuit" : "Mode Jour";
+    const nuit = snap.val() === true; // true = nuit
+    document.body.className = nuit ? "nuit" : "jour";
+    modeBtn.textContent = nuit ? "Mode Jour" : "Mode Nuit";
   });
 
   modeBtn.addEventListener("click", async () => {
     const snap = await modeRef.once("value");
-    const newMode = snap.val() ? false : true; // toggle
-    modeRef.set(newMode);
-    document.body.className = newMode ? "nuit" : "jour";
-    modeBtn.textContent = newMode ? "Mode Jour" : "Mode Nuit";
+    const nouvelleValeur = !(snap.val() === true); // toggle
+    modeRef.set(nouvelleValeur);
+    document.body.className = nouvelleValeur ? "nuit" : "jour";
+    modeBtn.textContent = nouvelleValeur ? "Mode Jour" : "Mode Nuit";
   });
 </script>
 
