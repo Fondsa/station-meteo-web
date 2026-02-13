@@ -1,10 +1,10 @@
-// Import des fonctions nécessaires depuis le SDK modulaire
+// App.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// 🔹 Initialisation Firebase
+// 🔹 Config Firebase
 const firebaseConfig = {
-  apiKey: apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
+  apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
   authDomain: "projetfakirradio.firebaseapp.com",
   databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "projetfakirradio",
@@ -21,44 +21,46 @@ const db = getDatabase(app);
 const tempExtRef = ref(db, "capteurs/exterieur/temperature");
 const tempIntRef = ref(db, "capteurs/interieur/temperature");
 const lampeRef = ref(db, "commande/lampe");
+const modeRef = ref(db, "ui/mode");
 
-// 🔹 Lecture temps réel
-onValue(tempExtRef, (snapshot) => {
-  document.getElementById("temp-ext").textContent = snapshot.val();
+// 🔹 Températures en temps réel
+onValue(tempExtRef, snap => {
+  document.getElementById("temp-ext").textContent = snap.val();
+});
+onValue(tempIntRef, snap => {
+  document.getElementById("temp-int").textContent = snap.val();
 });
 
-onValue(tempIntRef, (snapshot) => {
-  document.getElementById("temp-int").textContent = snapshot.val();
+// 🔹 Lampe
+const btnLampe = document.getElementById("btn-lampe");
+onValue(lampeRef, snap => {
+  btnLampe.textContent = snap.val() ? "Éteindre" : "Allumer";
 });
-
-const btn = document.getElementById("btn-lampe");
-
-// 🔹 Lecture état lampe et mise à jour du bouton
-onValue(lampeRef, (snapshot) => {
-  btn.textContent = snapshot.val() ? "Éteindre" : "Allumer";
-});
-
-// 🔹 Action du bouton
-btn.addEventListener("click", async () => {
+btnLampe.addEventListener("click", async () => {
   const snap = await get(lampeRef);
   set(lampeRef, !snap.val());
 });
 
-// Mise en mémoire du mode jour/nuit
-const db = getDatabase(app);
-const modeRef = ref(db, "ui/mode");
-const btnMode = document.getElementById("btn-mode");
+// 🔹 Mode Jour/Nuit persistant
+const modeBtn = document.getElementById("mode-btn");
 
-// 🔹 Lecture du mode au chargement
-onValue(modeRef, (snapshot) => {
-  const mode = snapshot.val();
-  document.body.className = mode; // suppose que tu as .jour et .nuit dans CSS
-  btnMode.textContent = mode === "jour" ? "Passer en nuit" : "Passer en jour";
+// Lecture initiale
+onValue(modeRef, snap => {
+  const mode = snap.val() || "jour";
+  document.body.className = mode;
+  modeBtn.textContent = mode === "jour" ? "Mode Nuit" : "Mode Jour";
 });
 
-// 🔹 Changement du mode
-btnMode.addEventListener("click", async () => {
+// Toggle et mise à jour Firebase
+modeBtn.addEventListener("click", async () => {
   const snap = await get(modeRef);
-  const newMode = snap.val() === "jour" ? "nuit" : "jour";
+  const currentMode = snap.val() || "jour";
+  const newMode = currentMode === "jour" ? "nuit" : "jour";
+
+  // Update Firebase
   set(modeRef, newMode);
+
+  // Update style
+  document.body.className = newMode;
+  modeBtn.textContent = newMode === "jour" ? "Mode Nuit" : "Mode Jour";
 });
