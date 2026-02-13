@@ -1,34 +1,13 @@
-/* style.css */
-
-/* Styles généraux */
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-/* Mode jour */
 body.jour {
   background-color: #fff7e6;
   color: #ff8800;
 }
 
-/* Mode nuit */
 body.nuit {
   background-color: #222222;
   color: #ffcc33;
 }
 
-/* Titres */
-h1 {
-  margin-bottom: 20px;
-}
-
-/* Cartes */
 .card {
   background-color: #ffe082;
   padding: 20px;
@@ -40,39 +19,17 @@ h1 {
   transition: background-color 0.3s;
 }
 
-/* Mode nuit cartes */
 body.nuit .card {
   background-color: #424242;
 }
 
-/* Boutons */
-button {
+button#mode-btn {
+  background-color: #ffcc00;
+  color: #222;
   padding: 12px 24px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   margin-top: 10px;
-  transition: transform 0.1s, background-color 0.3s, color 0.3s;
-}
-
-button:hover {
-  transform: scale(1.05);
-}
-
-/* Bouton lampe */
-#btn-lampe {
-  background-color: #ff8800;
-  color: #fff;
-}
-
-body.nuit #btn-lampe {
-  background-color: #ff9800;
-  color: #000;
-}
-
-/* Bouton mode jour/nuit */
-#mode-btn {
-  background-color: #ffcc00;
-  color: #222;
 }
