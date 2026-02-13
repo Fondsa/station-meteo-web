@@ -1,0 +1,9 @@
+body.jour {
+  background-color: #fff7e6;
+  color: #ff8800;
+}
+
+body.nuit {
+  background-color: #222222;
+  color: #ffcc33;
+}
