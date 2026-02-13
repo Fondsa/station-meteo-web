@@ -1,9 +1,39 @@
-body.jour {
-  background-color: #fff7e6;
-  color: #ff8800;
+/* style.css */
+
+/* Styles généraux */
+body {
+  font-family: Arial, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
 }
 
+/* Mode jour */
+body.jour {
+  background-color: #fff7e6; /* fond clair */
+  color: #ff8800; /* texte orange */
+}
+
+/* Mode nuit */
 body.nuit {
-  background-color: #222222;
-  color: #ffcc33;
+  background-color: #222222; /* fond sombre */
+  color: #ffcc33; /* texte jaune */
+}
+
+/* Exemple pour bouton */
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+button#btn-lampe {
+  background-color: #ff8800;
+  color: #fff;
+}
+
+button#btn-mode {
+  background-color: #ffcc33;
+  color: #222;
 }
