@@ -9,6 +9,19 @@
 
 <h1>Station Météo</h1>
 
+<div class="card" id="auth-section">
+  <h2 id="auth-title">Connexion</h2>
+  <input type="email" id="email" placeholder="Email" style="padding:5px; margin:5px;">
+  <input type="password" id="password" placeholder="Mot de passe" style="padding:5px; margin:5px;">
+  <br>
+  <button id="btn-login">Se connecter</button>
+  <button id="btn-signup" style="background-color: #555;">S'inscrire</button>
+  <p id="user-info"></p>
+  <button id="btn-logout" style="display:none; background-color: #888;">Déconnexion</button>
+  <br>
+  <a href="admin.html" id="admin-link" style="display:none; color: #ff8800; font-weight: bold; text-decoration: none; margin-top: 10px;">Accéder à la Page Admin</a>
+</div>
+
 <div class="card">
   <h2>Capteurs</h2>
   <p>Extérieur : <span id="temp-ext">--</span> °C</p>
@@ -19,48 +32,14 @@
 
 <div class="card">
   <h2>Lampe Extérieure</h2>
-  <button id="btn-lampe">Allumer</button>
+  <button id="btn-lampe">Chargement...</button>
 </div>
 
-<!-- Firebase CDN compat -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "TA_CLE_API", // remplace par ta clé
-    authDomain: "projetfakirradio.firebaseapp.com",
-    databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "projetfakirradio",
-    storageBucket: "projetfakirradio.firebasestorage.app",
-    messagingSenderId: "363899261538",
-    appId: "1:363899261538:web:ad30da02b1485f5c2d373b",
-    measurementId: "G-EZL8K5CS4Y"
-  };
+<div class="card">
+    <button id="mode-btn">Mode Nuit</button>
+</div>
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  const tempExtRef = db.ref("capteurs/exterieur/temperature");
-  const humExtRef  = db.ref("capteurs/exterieur/humidite");
-  const tempIntRef = db.ref("capteurs/interieur/temperature");
-  const humIntRef  = db.ref("capteurs/interieur/humidite");
-  const lampeRef   = db.ref("commande/lampe");
-
-  const btnLampe = document.getElementById("btn-lampe");
-
-  // 🔹 Lecture temps réel capteurs
-  tempExtRef.on("value", snap => document.getElementById("temp-ext").textContent = snap.val() ?? "--");
-  humExtRef.on("value", snap => document.getElementById("hum-ext").textContent = snap.val() ?? "--");
-  tempIntRef.on("value", snap => document.getElementById("temp-int").textContent = snap.val() ?? "--");
-  humIntRef.on("value", snap => document.getElementById("hum-int").textContent = snap.val() ?? "--");
-
-  // 🔹 Lampe
-  lampeRef.on("value", snap => btnLampe.textContent = snap.val() ? "Éteindre" : "Allumer");
-  btnLampe.addEventListener("click", async () => {
-    const snap = await lampeRef.once("value");
-    lampeRef.set(!snap.val());
-  });
-</script>
+<script type="module" src="App.js"></script>
 
 </body>
 </html>
