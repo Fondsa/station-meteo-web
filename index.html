@@ -2,75 +2,105 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Station Météo - Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Météo - Dashboard</title>
   <style>
-    html, body { margin: 0; padding: 0; min-height: 100vh; width: 100%; }
-    body {
-      padding-top: 80px; display: flex; flex-direction: column; align-items: center;
-      background-color: #fff3e0; transition: background-color 0.3s;
-      background-image: repeating-linear-gradient(45deg, rgba(255, 200, 100, 0.2) 0px, rgba(255, 200, 100, 0.2) 20px, transparent 20px, transparent 40px);
-      background-attachment: fixed;
-    }
-    .top-bar {
-      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-      background-color: #ff8800; color: white; display: flex;
-      align-items: center; justify-content: space-between; padding: 0 20px;
-      box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-    .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 35px; height: 22px; background: transparent; border: none; padding: 0; }
-    .menu-btn span { display: block; width: 100%; height: 4px; background-color: #fff; border-radius: 4px; }
-    .drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #ffe082; overflow-x: hidden; transition: 0.4s; display: flex; flex-direction: column; box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
-    .drawer-content { display: flex; flex-direction: column; height: 100%; padding-top: 60px; }
+    html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+    body { display: flex; flex-direction: column; background-color: #fff3e0; transition: 0.3s; padding-top: 60px; box-sizing: border-box; }
+
+    /* Barre de navigation */
+    .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background-color: #ff8800; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 30px; height: 20px; background: transparent; border: none; }
+    .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
+    
+    /* Menu Drawer */
+    .drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #ffe082; overflow-x: hidden; transition: 0.4s; display: flex; flex-direction: column; }
     .drawer a, .drawer button { padding: 20px; text-decoration: none; font-size: 18px; color: #333; border: none; background: none; text-align: left; cursor: pointer; }
-    .close-btn { position: absolute; top: 15px; left: 15px; font-size: 35px; cursor: pointer; }
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
-    body.nuit { background-color: #1a1a1a !important; background-image: none !important; color: white; }
-    body.nuit .card { background-color: #333; color: white; border: 1px solid #444; }
+
+    /* Conteneur principal Adaptatif */
+    .main-layout { 
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+      padding: 20px; gap: 20px; box-sizing: border-box; width: 100%;
+    }
+
+    /* Grille de cartes : 1 colonne mobile / 2 colonnes PC */
+    .grid-container {
+      display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; max-width: 900px;
+    }
+
+    @media (min-width: 768px) {
+      .grid-container { grid-template-columns: 1fr 1fr; }
+      .card-full { grid-column: span 2; }
+    }
+
+    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); text-align: center; }
+    .valeur { font-size: 3rem; font-weight: bold; color: #ff8800; margin: 10px 0; }
+    .label { font-size: 1.1rem; color: #666; font-weight: bold; letter-spacing: 1px; }
+
+    #btn-lampe { width: 100%; padding: 20px; border-radius: 15px; border: none; font-size: 1.3rem; font-weight: bold; cursor: pointer; background-color: #ff8800; color: white; transition: 0.3s; }
+    #btn-lampe.on { background-color: #4caf50; box-shadow: 0 0 15px rgba(76, 175, 80, 0.5); }
+
+    /* Thème Nuit */
+    body.nuit { background-color: #1a1a1a !important; color: white; }
+    body.nuit .card { background-color: #2c2c2c; color: white; border: 1px solid #444; }
     body.nuit .drawer { background-color: #222; }
     body.nuit .drawer a, body.nuit .drawer button { color: #eee; }
   </style>
 </head>
 <body>
   <div id="overlay"></div>
-  <div class="top-bar" id="top-bar" style="display:none;">
-    <span style="font-weight:bold; font-size:1.3rem;">Dashboard Météo</span>
+  <div class="top-bar" id="nav-bar" style="display:none;">
+    <span style="font-weight:bold; font-size:1.2rem;">🏠 Dashboard</span>
     <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
   </div>
+
   <div id="myDrawer" class="drawer">
-    <span class="close-btn" id="close-drawer">&times;</span>
     <div class="drawer-content">
-      <a href="admin.html" id="admin-link" style="display:none;">🔑 Administration</a>
       <a href="graph.html">📈 Graphiques</a>
+      <a href="admin.html" id="admin-link" style="display:none;">🔑 Administration</a>
       <button id="mode-btn-toggle">🌙 Mode Nuit</button>
-      <button id="btn-logout" style="margin-top:auto; color:red; font-weight:bold; border-top:1px solid #ff8800;">🚪 Déconnexion</button>
+      <button id="btn-logout" style="margin-top:auto; color:red; font-weight:bold;">🚪 Déconnexion</button>
     </div>
   </div>
 
-  <div id="auth-section"><div class="card"><h2>Connexion</h2><input type="email" id="email" placeholder="Email"><input type="password" id="password" placeholder="Mot de passe"><button id="btn-login">Se connecter</button><button id="btn-signup" style="background-color: #555;">S'inscrire</button></div></div>
-  <div id="main-content" style="display:none; width: 100%; flex-direction: column; align-items: center;">
-    <div class="card"><h2>Capteurs Temps Réel</h2><p>🌡️ Extérieur : <span id="temp-ext">--</span> °C | <span id="hum-ext">--</span> %</p><p>🏠 Intérieur : <span id="temp-int">--</span> °C | <span id="hum-int">--</span> %</p></div>
-    <div class="card"><h2>Relais / Lampe</h2><button id="btn-lampe">Chargement...</button></div>
+  <div id="auth-section" class="main-layout"><div class="card"><h2>Connexion</h2><input type="email" id="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;"><br><input type="password" id="password" placeholder="Mot de passe" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;"><br><button id="btn-login" style="width:100%; padding:12px; background:#ff8800; color:white; border:none; border-radius:8px; font-weight:bold;">Se connecter</button></div></div>
+
+  <div id="main-content" class="main-layout" style="display:none;">
+    <div class="grid-container">
+      <div class="card">
+        <div class="label">🌡️ EXTÉRIEUR</div>
+        <div class="valeur"><span id="temp-ext">--</span>°C</div>
+        <div class="label">💧 <span id="hum-ext">--</span>% Humidité</div>
+      </div>
+      <div class="card">
+        <div class="label">🏠 INTÉRIEUR</div>
+        <div class="valeur"><span id="temp-int">--</span>°C</div>
+        <div class="label">💧 <span id="hum-int">--</span>% Humidité</div>
+      </div>
+      <div class="card card-full">
+        <button id="btn-lampe">CHARGEMENT...</button>
+      </div>
+    </div>
   </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getDatabase, ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio", storageBucket: "projetfakirradio.firebasestorage.app", messagingSenderId: "363899261538", appId: "1:363899261538:web:ad30da02b1485f5c2d373b" };
+  const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
   const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
   const dr = document.getElementById("myDrawer"), ov = document.getElementById("overlay");
   document.getElementById("open-drawer").onclick = () => { dr.style.width = "250px"; ov.style.display = "block"; };
-  document.getElementById("close-drawer").onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
+  ov.onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
   onAuthStateChanged(auth, (u) => {
     if (u) {
       document.getElementById("auth-section").style.display = "none";
       document.getElementById("main-content").style.display = "flex";
-      document.getElementById("top-bar").style.display = "flex";
+      document.getElementById("nav-bar").style.display = "flex";
       onValue(ref(db, `users/${u.uid}`), (s) => { if(s.exists()){ document.body.className = s.val().theme; document.getElementById("admin-link").style.display = s.val().role === "admin" ? "block" : "none"; } });
     } else { document.getElementById("auth-section").style.display = "flex"; document.getElementById("main-content").style.display = "none"; }
   });
@@ -83,17 +113,16 @@
     document.getElementById("hum-int").textContent = d.interieur?.humidite;
   });
 
+  onValue(ref(db, "commande/lampe"), s => {
+    const btn = document.getElementById("btn-lampe");
+    btn.textContent = s.val() ? "ÉTEINDRE LA LAMPE" : "ALLUMER LA LAMPE";
+    btn.className = s.val() ? "on" : "";
+  });
+
+  document.getElementById("btn-lampe").onclick = async () => { const s = await get(ref(db, "commande/lampe")); set(ref(db, "commande/lampe"), !s.val()); };
   document.getElementById("btn-login").onclick = () => signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("password").value);
   document.getElementById("btn-logout").onclick = () => signOut(auth);
-  document.getElementById("mode-btn-toggle").onclick = async () => {
-    const s = await get(ref(db, `users/${auth.currentUser.uid}`));
-    update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" });
-  };
-  onValue(ref(db, "commande/lampe"), s => document.getElementById("btn-lampe").textContent = s.val() ? "Éteindre Lampe" : "Allumer Lampe");
-  document.getElementById("btn-lampe").onclick = async () => {
-    const s = await get(ref(db, "commande/lampe"));
-    set(ref(db, "commande/lampe"), !s.val());
-  };
+  document.getElementById("mode-btn-toggle").onclick = async () => { const s = await get(ref(db, `users/${auth.currentUser.uid}`)); update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" }); };
 </script>
 </body>
 </html>
