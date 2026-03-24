@@ -50,13 +50,13 @@
 
   <div id="auth-section"><div class="card"><h2>Connexion</h2><input type="email" id="email" placeholder="Email"><input type="password" id="password" placeholder="Mot de passe"><button id="btn-login">Se connecter</button><button id="btn-signup" style="background-color: #555;">S'inscrire</button></div></div>
   <div id="main-content" style="display:none; width: 100%; flex-direction: column; align-items: center;">
-    <div class="card"><h2>Capteurs Actuels</h2><p>🌡️ Extérieur : <span id="temp-ext">--</span> °C | <span id="hum-ext">--</span> %</p><p>🏠 Intérieur : <span id="temp-int">--</span> °C | <span id="hum-int">--</span> %</p></div>
+    <div class="card"><h2>Capteurs Temps Réel</h2><p>🌡️ Extérieur : <span id="temp-ext">--</span> °C | <span id="hum-ext">--</span> %</p><p>🏠 Intérieur : <span id="temp-int">--</span> °C | <span id="hum-int">--</span> %</p></div>
     <div class="card"><h2>Relais / Lampe</h2><button id="btn-lampe">Chargement...</button></div>
   </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getDatabase, ref, onValue, get, set, update, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { getDatabase, ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
   const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio", storageBucket: "projetfakirradio.firebasestorage.app", messagingSenderId: "363899261538", appId: "1:363899261538:web:ad30da02b1485f5c2d373b" };
@@ -66,14 +66,12 @@
   document.getElementById("open-drawer").onclick = () => { dr.style.width = "250px"; ov.style.display = "block"; };
   document.getElementById("close-drawer").onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
-  let dernierEnregistrement = 0, intervalleSec = 300;
   onAuthStateChanged(auth, (u) => {
     if (u) {
       document.getElementById("auth-section").style.display = "none";
       document.getElementById("main-content").style.display = "flex";
       document.getElementById("top-bar").style.display = "flex";
       onValue(ref(db, `users/${u.uid}`), (s) => { if(s.exists()){ document.body.className = s.val().theme; document.getElementById("admin-link").style.display = s.val().role === "admin" ? "block" : "none"; } });
-      onValue(ref(db, "config/intervalle_sec"), (s) => { intervalleSec = s.val() || 300; });
     } else { document.getElementById("auth-section").style.display = "flex"; document.getElementById("main-content").style.display = "none"; }
   });
 
@@ -83,14 +81,6 @@
     document.getElementById("hum-ext").textContent = d.exterieur?.humidite;
     document.getElementById("temp-int").textContent = d.interieur?.temperature;
     document.getElementById("hum-int").textContent = d.interieur?.humidite;
-    
-    const maintenant = Date.now();
-    if (maintenant - dernierEnregistrement >= (intervalleSec * 1000)) {
-      const date = new Date();
-      const horodatage = date.toLocaleDateString('fr-FR') + " - " + date.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-      push(ref(db, "historique"), { temps: horodatage, tempExt: d.exterieur.temperature, humExt: d.exterieur.humidite, tempInt: d.interieur.temperature, humInt: d.interieur.humidite, timestamp: maintenant });
-      dernierEnregistrement = maintenant;
-    }
   });
 
   document.getElementById("btn-login").onclick = () => signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("password").value);
@@ -98,6 +88,11 @@
   document.getElementById("mode-btn-toggle").onclick = async () => {
     const s = await get(ref(db, `users/${auth.currentUser.uid}`));
     update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" });
+  };
+  onValue(ref(db, "commande/lampe"), s => document.getElementById("btn-lampe").textContent = s.val() ? "Éteindre Lampe" : "Allumer Lampe");
+  document.getElementById("btn-lampe").onclick = async () => {
+    const s = await get(ref(db, "commande/lampe"));
+    set(ref(db, "commande/lampe"), !s.val());
   };
 </script>
 </body>
