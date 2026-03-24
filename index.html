@@ -2,45 +2,53 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Station Météo</title>
+  <title>Station Météo - Projet</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Style de secours si style.css ne charge pas */
+    .card { border: 1px solid #ccc; padding: 15px; margin: 10px; border-radius: 8px; }
+    input { display: block; margin: 10px 0; padding: 8px; width: 200px; }
+    #admin-link { display: none; background-color: #ff8800; color: white; padding: 10px; text-decoration: none; border-radius: 5px; margin-top: 10px; }
+  </style>
 </head>
 <body>
 
-<h1>Station Météo</h1>
+<h1>Station Météo Personnel</h1>
 
-<div class="card" id="auth-section">
-  <h2 id="auth-title">Connexion</h2>
-  <input type="email" id="email" placeholder="Email" style="padding:5px; margin:5px;">
-  <input type="password" id="password" placeholder="Mot de passe" style="padding:5px; margin:5px;">
-  <br>
-  <button id="btn-login">Se connecter</button>
-  <button id="btn-signup" style="background-color: #555;">S'inscrire</button>
-  <p id="user-info"></p>
-  <button id="btn-logout" style="display:none; background-color: #888;">Déconnexion</button>
-  <br>
-  <a href="admin.html" id="admin-link" style="display:none; color: #ff8800; font-weight: bold;">Accéder à la Page Admin</a>
+<div class="card">
+  <h2 id="auth-title">Connexion / Inscription</h2>
+  <div id="auth-inputs">
+    <input type="email" id="email" placeholder="Email (ex: test@test.fr)">
+    <input type="password" id="password" placeholder="Mot de passe">
+    <button id="btn-login">Se connecter</button>
+    <button id="btn-signup" style="background-color: #666;">Créer un compte</button>
+  </div>
+  
+  <div id="auth-logged" style="display:none;">
+    <p id="user-info" style="font-weight:bold;"></p>
+    <button id="btn-logout" style="background-color: #888;">Déconnexion</button>
+    <br><br>
+    <a href="admin.html" id="admin-link">PAGE ADMINISTRATEUR</a>
+  </div>
 </div>
 
 <div class="card">
-  <h2>Capteurs</h2>
-  <p>Extérieur : <span id="temp-ext">--</span> °C / <span id="hum-ext">--</span> %</p>
-  <p>Intérieur : <span id="temp-int">--</span> °C / <span id="hum-int">--</span> %</p>
+  <h2>Données Capteurs</h2>
+  <p>Extérieur : <span id="temp-ext">--</span> °C | Humidité : <span id="hum-ext">--</span> %</p>
+  <p>Intérieur : <span id="temp-int">--</span> °C | Humidité : <span id="hum-int">--</span> %</p>
 </div>
 
 <div class="card">
-  <h2>Commandes</h2>
+  <h2>Contrôles</h2>
   <button id="btn-lampe">Chargement...</button>
   <button id="mode-btn">Mode Nuit</button>
 </div>
 
 <script type="module">
-  // Importations
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  // Config
   const firebaseConfig = {
     apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
     authDomain: "projetfakirradio.firebaseapp.com",
@@ -51,82 +59,87 @@
     appId: "1:363899261538:web:ad30da02b1485f5c2d373b"
   };
 
-  // Initialisation
-  console.log("Démarrage Firebase...");
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const auth = getAuth(app);
 
-  // --- AUTHENTIFICATION ---
-  const btnLogin = document.getElementById("btn-login");
-  const btnSignup = document.getElementById("btn-signup");
-
-  btnLogin.onclick = () => {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
-    signInWithEmailAndPassword(auth, email, pass)
-      .then(() => console.log("Connecté !"))
-      .catch(err => alert("Erreur connexion: " + err.message));
+  // --- LOGIQUE BOUTONS ---
+  
+  // Connexion
+  document.getElementById("btn-login").onclick = () => {
+    const e = document.getElementById("email").value;
+    const p = document.getElementById("password").value;
+    signInWithEmailAndPassword(auth, e, p).catch(err => alert("Erreur: " + err.message));
   };
 
-  btnSignup.onclick = async () => {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
+  // Inscription
+  document.getElementById("btn-signup").onclick = async () => {
+    const e = document.getElementById("email").value;
+    const p = document.getElementById("password").value;
     try {
-      const res = await createUserWithEmailAndPassword(auth, email, pass);
-      await set(ref(db, 'users/' + res.user.uid), { email: email, role: "user" });
-      alert("Compte créé !");
-    } catch (err) { alert("Erreur inscription: " + err.message); }
+      const res = await createUserWithEmailAndPassword(auth, e, p);
+      // On crée l'entrée dans la database pour le rôle
+      await set(ref(db, 'users/' + res.user.uid), { email: e, role: "user" });
+      alert("Compte " + e + " créé avec succès !");
+    } catch (err) { alert("Erreur: " + err.message); }
   };
 
+  // Déconnexion
   document.getElementById("btn-logout").onclick = () => signOut(auth);
 
+  // Surveillance de l'utilisateur
   onAuthStateChanged(auth, async (user) => {
-    const adminLink = document.getElementById("admin-link");
-    const logoutBtn = document.getElementById("btn-logout");
+    const inputs = document.getElementById("auth-inputs");
+    const logged = document.getElementById("auth-logged");
+    const adminBtn = document.getElementById("admin-link");
+
     if (user) {
-      document.getElementById("user-info").textContent = "Connecté: " + user.email;
-      logoutBtn.style.display = "block";
-      btnLogin.style.display = "none";
-      btnSignup.style.display = "none";
+      inputs.style.display = "none";
+      logged.style.display = "block";
+      document.getElementById("user-info").textContent = "Utilisateur : " + user.email;
       
+      // Vérification du rôle Admin dans la DB
       const snap = await get(ref(db, `users/${user.uid}`));
-      if (snap.exists() && snap.val().role === "admin") adminLink.style.display = "block";
+      if (snap.exists() && snap.val().role === "admin") {
+        adminBtn.style.display = "inline-block";
+      } else {
+        adminBtn.style.display = "none";
+      }
     } else {
-      document.getElementById("user-info").textContent = "";
-      logoutBtn.style.display = "none";
-      btnLogin.style.display = "inline-block";
-      btnSignup.style.display = "inline-block";
-      adminLink.style.display = "none";
+      inputs.style.display = "block";
+      logged.style.display = "none";
+      adminBtn.style.display = "none";
     }
   });
 
-  // --- DONNÉES ---
-  onValue(ref(db, "capteurs/exterieur/temperature"), s => document.getElementById("temp-ext").textContent = s.val());
-  onValue(ref(db, "capteurs/exterieur/humidite"), s => document.getElementById("hum-ext").textContent = s.val());
-  onValue(ref(db, "capteurs/interieur/temperature"), s => document.getElementById("temp-int").textContent = s.val());
-  onValue(ref(db, "capteurs/interieur/humidite"), s => document.getElementById("hum-int").textContent = s.val());
+  // --- LECTURE TEMPS RÉEL (DATABASE) ---
+  onValue(ref(db, "capteurs/exterieur/temperature"), s => document.getElementById("temp-ext").textContent = s.val() ?? "--");
+  onValue(ref(db, "capteurs/exterieur/humidite"), s => document.getElementById("hum-ext").textContent = s.val() ?? "--");
+  onValue(ref(db, "capteurs/interieur/temperature"), s => document.getElementById("temp-int").textContent = s.val() ?? "--");
+  onValue(ref(db, "capteurs/interieur/humidite"), s => document.getElementById("hum-int").textContent = s.val() ?? "--");
 
+  // Bouton Lampe
   const btnLampe = document.getElementById("btn-lampe");
   onValue(ref(db, "commande/lampe"), s => {
-    btnLampe.textContent = s.val() ? "Éteindre Lampe" : "Allumer Lampe";
+    btnLampe.textContent = s.val() ? "Éteindre la Lampe" : "Allumer la Lampe";
   });
   btnLampe.onclick = async () => {
     const s = await get(ref(db, "commande/lampe"));
     set(ref(db, "commande/lampe"), !s.val());
   };
 
+  // Mode Jour/Nuit
   const modeBtn = document.getElementById("mode-btn");
   onValue(ref(db, "ui/mode"), s => {
     const m = s.val() || "jour";
     document.body.className = m;
-    modeBtn.textContent = m === "jour" ? "Mode Nuit" : "Mode Jour";
+    modeBtn.textContent = m === "jour" ? "Passer en Mode Nuit" : "Passer en Mode Jour";
   });
   modeBtn.onclick = async () => {
     const s = await get(ref(db, "ui/mode"));
-    set(ref(db, "ui/mode"), s.val() === "jour" ? "nuit" : "jour");
+    set(ref(db, "ui/mode"), (s.val() === "jour") ? "nuit" : "jour");
   };
-</script>
 
+</script>
 </body>
 </html>
