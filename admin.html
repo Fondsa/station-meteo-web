@@ -2,133 +2,194 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Administration - Sécurisée</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Administration - Station Météo</title>
   <style>
-    html, body { margin: 0; padding: 0; min-height: 100vh; width: 100%; }
-    body { 
-      padding-top: 20px; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      background-color: #fff3e0; 
-      transition: background-color 0.3s, color 0.3s;
+    /* --- STRUCTURE & RESET --- */
+    html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+    body { display: flex; flex-direction: column; background-color: #fff3e0; transition: 0.3s; padding-top: 60px; box-sizing: border-box; }
+
+    /* --- TOP BAR --- */
+    .top-bar { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 60px; 
+      background-color: #ff8800; color: white; display: flex; 
+      align-items: center; justify-content: space-between; 
+      padding: 0 20px; box-sizing: border-box; z-index: 1000; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
     }
-    h1 { color: #ff8800; }
-    .user-card { 
-      background: white; 
-      padding: 15px; 
-      margin: 10px; 
-      border-radius: 8px; 
-      width: 90%; 
-      max-width: 450px; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-      border-left: 5px solid #ff8800; 
-      transition: background-color 0.3s, color 0.3s;
+    .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 28px; height: 18px; background: transparent; border: none; padding: 0; }
+    .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
+
+    /* --- DRAWER (Menu en Cartes) --- */
+    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
+    .drawer { 
+      height: 100%; width: 0; position: fixed; z-index: 2000; 
+      top: 0; right: 0; background-color: #f8f9fa; 
+      overflow-x: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      box-shadow: -5px 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; 
     }
-    .user-actions { display: flex; gap: 10px; margin-top: 15px; }
-    .btn-del { background: #ff4444; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .btn-promo { background: #4caf50; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .badge-admin { color: #4caf50; font-weight: bold; text-transform: uppercase; border: 1px solid #4caf50; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+    .drawer-content { flex: 1; display: flex; flex-direction: column; padding: 80px 15px 20px 15px; gap: 12px; width: 280px; box-sizing: border-box; }
     
-    /* Mode Nuit */
+    .menu-card { 
+      background: white; padding: 15px; border-radius: 12px; 
+      text-decoration: none; color: #333; font-weight: bold; 
+      display: flex; align-items: center; gap: 15px; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border: 1px solid transparent; 
+    }
+    .menu-card:hover { border-color: #ff8800; transform: translateY(-2px); }
+    
+    .logout-container { padding: 20px 15px; border-top: 1px solid #eee; }
+    .btn-logout { 
+      width: 100%; background: #fee; color: #d32f2f; border: 1px solid #ffcdd2; 
+      padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; 
+      display: flex; align-items: center; justify-content: center; gap: 10px; 
+    }
+
+    /* --- LAYOUT CONTENU --- */
+    .main-layout { 
+      flex: 1; display: flex; flex-direction: column; padding: 20px; 
+      gap: 20px; box-sizing: border-box; max-width: 1000px; 
+      margin: 0 auto; width: 100%; overflow-y: auto; 
+    }
+
+    /* Carte des utilisateurs */
+    .admin-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 10px; }
+    h2 { margin-top: 0; color: #ff8800; font-size: 1.4rem; }
+
+    /* Liste des utilisateurs */
+    .user-item { 
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 12px; border-bottom: 1px solid #eee; gap: 10px; 
+    }
+    .user-info { display: flex; flex-direction: column; flex: 1; }
+    .user-email { font-weight: bold; font-size: 0.95rem; }
+    .user-role { font-size: 0.8rem; color: #666; }
+
+    /* Contrôles */
+    select { padding: 8px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; font-family: inherit; }
+    .btn-del { background: #fee; color: #d32f2f; border: 1px solid #ffcdd2; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+    /* --- MODE NUIT (Harmonisé Dashboard/Graph) --- */
     body.nuit { background-color: #1a1a1a !important; color: white; }
-    body.nuit h1 { color: #ffcc80; }
-    body.nuit .user-card { background-color: #333; color: #eee; border-left: 5px solid #ffcc80; }
-    body.nuit .card { background-color: #2c3e50; color: white; }
+    body.nuit .admin-card { background-color: #2c2c2c; color: white; border: 1px solid #444; }
+    body.nuit .user-item { border-bottom-color: #444; }
+    body.nuit .user-role { color: #aaa; }
+    body.nuit select { background: #333; color: white; border-color: #555; }
+    
+    body.nuit .drawer { background-color: #222; }
+    body.nuit .menu-card { background-color: #333; color: white; box-shadow: none; border-color: #444; }
+    body.nuit .menu-card:hover { border-color: #ff8800; }
+    
+    body.nuit .logout-container { border-color: #444; }
+    body.nuit .btn-logout { background: #311; border-color: #522; color: #ff8080; }
+
+    /* Scrollbar pour PC en mode nuit */
+    body.nuit .main-layout::-webkit-scrollbar { width: 8px; }
+    body.nuit .main-layout::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+
   </style>
 </head>
 <body>
 
-  <h1>Gestion Utilisateurs</h1>
+  <div id="overlay"></div>
+  <div class="top-bar">
+    <span style="font-weight:bold; font-size:1.2rem;">🔑 Administration</span>
+    <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
+  </div>
 
-  <div id="user-list">Chargement...</div>
+  <div id="myDrawer" class="drawer">
+    <div class="drawer-content">
+      <a href="index.html" class="menu-card"><span>🏠</span> Dashboard</a>
+      <a href="graph.html" class="menu-card"><span>📈</span> Graphiques</a>
+      <button id="mode-btn-toggle" class="menu-card" style="width:100%; border:none; cursor:pointer; font-family:inherit;"><span>🌙</span> Mode Nuit</button>
+    </div>
+    <div class="logout-container">
+      <button id="btn-logout" class="btn-logout">🚪 Déconnexion</button>
+    </div>
+  </div>
 
-  <div class="card">
-    <button onclick="window.location.href='index.html'">Retour au Dashboard</button>
+  <div class="main-layout" id="admin-container">
+    <div class="admin-card">
+      <h2>Gestion des Utilisateurs</h2>
+      <div id="user-list">
+        <p style="text-align:center; color:#888;">Chargement des utilisateurs...</p>
+      </div>
+    </div>
   </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getDatabase, ref, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
-    authDomain: "projetfakirradio.firebaseapp.com",
-    databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "projetfakirradio",
-    storageBucket: "projetfakirradio.firebasestorage.app",
-    messagingSenderId: "363899261538",
-    appId: "1:363899261538:web:ad30da02b1485f5c2d373b"
-  };
+  const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
+  const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const auth = getAuth(app);
+  // --- DRAWER ---
+  const dr = document.getElementById("myDrawer"), ov = document.getElementById("overlay");
+  document.getElementById("open-drawer").onclick = () => { dr.style.width = "280px"; ov.style.display = "block"; };
+  ov.onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
-  let currentAdminUid = "";
+  // --- AUTH & DROITS ---
+  onAuthStateChanged(auth, u => {
+    if (!u) {
+      window.location.href = "index.html";
+    } else {
+      onValue(ref(db, `users/${u.uid}`), (s) => {
+        if (!s.exists() || s.val().role !== "admin") {
+          window.location.href = "index.html"; // Sécurité si non-admin
+        } else {
+          document.body.className = s.val().theme;
+          loadUsers();
+        }
+      });
+    }
+  });
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) { window.location.href = "index.html"; return; }
-    currentAdminUid = user.uid;
-
-    onValue(ref(db, `users/${user.uid}`), (snap) => {
-      if (snap.exists()) {
-        const userData = snap.val();
-        if (userData.role !== "admin") { window.location.href = "index.html"; }
-        document.body.className = userData.theme || "jour";
+  // --- GESTION DES UTILISATEURS ---
+  function loadUsers() {
+    onValue(ref(db, "users"), (snap) => {
+      const users = snap.val();
+      const list = document.getElementById("user-list");
+      list.innerHTML = "";
+      
+      for (let id in users) {
+        const u = users[id];
+        const div = document.createElement("div");
+        div.className = "user-item";
+        div.innerHTML = `
+          <div class="user-info">
+            <span class="user-email">${u.email}</span>
+            <span class="user-role">Rôle : ${u.role}</span>
+          </div>
+          <select onchange="updateRole('${id}', this.value)">
+            <option value="user" ${u.role === 'user' ? 'selected' : ''}>Utilisateur</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
+          <button class="btn-del" onclick="deleteUser('${id}')">🗑️</button>
+        `;
+        list.appendChild(div);
       }
     });
-  });
+  }
 
-  onValue(ref(db, "users"), (snapshot) => {
-    const users = snapshot.val();
-    const container = document.getElementById("user-list");
-    container.innerHTML = "";
-    if (!users) return;
+  // Fonctions globales attachées à window pour le HTML dynamique
+  window.updateRole = (uid, newRole) => {
+    update(ref(db, `users/${uid}`), { role: newRole });
+  };
 
-    for (let uid in users) {
-      const u = users[uid];
-      const div = document.createElement("div");
-      div.className = "user-card";
-      
-      const isSelf = (uid === currentAdminUid);
-      const isAdmin = (u.role === "admin");
-
-      div.innerHTML = `
-        <p><strong>Email:</strong> ${u.email}</p>
-        <p><strong>Statut:</strong> ${isAdmin ? '<span class="badge-admin">Administrateur</span>' : '<span>Utilisateur Standard</span>'}</p>
-        <div class="user-actions">
-          ${isSelf ? '<em>(Votre compte)</em>' : 
-            isAdmin ? '<em>Sécurisé (Aucune action possible)</em>' : 
-            `<button class="btn-promo" data-id="${uid}">Rendre Admin</button>
-             <button class="btn-del" data-id="${uid}">Supprimer le compte</button>`
-          }
-        </div>
-      `;
-      container.appendChild(div);
+  window.deleteUser = (uid) => {
+    if (confirm("Supprimer cet utilisateur ?")) {
+      remove(ref(db, `users/${uid}`));
     }
+  };
 
-    // Actions
-    document.querySelectorAll(".btn-promo").forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.getAttribute("data-id");
-        if(confirm("Promouvoir ce compte en Administrateur ? Attention : cette action est irréversible via cette interface.")) {
-          update(ref(db, `users/${id}`), { role: "admin" });
-        }
-      };
-    });
-
-    document.querySelectorAll(".btn-del").forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.getAttribute("data-id");
-        if(confirm("Supprimer ce compte définitivement ?")) {
-          remove(ref(db, `users/${id}`));
-        }
-      };
-    });
-  });
+  // --- ACTIONS ---
+  document.getElementById("btn-logout").onclick = () => signOut(auth);
+  document.getElementById("mode-btn-toggle").onclick = async () => {
+    const s = await get(ref(db, `users/${auth.currentUser.uid}`));
+    update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" });
+  };
 </script>
 </body>
 </html>
