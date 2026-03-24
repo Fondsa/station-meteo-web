@@ -5,28 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Météo - Dashboard</title>
   <style>
-    /* CSS Identique au précédent (Top Bar, Drawer, Cards, Mode Nuit) */
+    /* --- STYLE DASHBOARD --- */
     html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
     body { display: flex; flex-direction: column; background-color: #fff3e0; transition: 0.3s; padding-top: 60px; box-sizing: border-box; }
+
+    /* --- TOP BAR --- */
     .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background-color: #ff8800; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
     .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 28px; height: 18px; background: transparent; border: none; padding: 0; }
     .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
+
+    /* --- DRAWER --- */
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
     .drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #f8f9fa; overflow-x: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -5px 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
     .drawer-content { flex: 1; display: flex; flex-direction: column; padding: 80px 15px 20px 15px; gap: 12px; width: 280px; box-sizing: border-box; }
     .menu-card { background: white; padding: 15px; border-radius: 12px; text-decoration: none; color: #333; font-weight: bold; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border: 1px solid transparent; }
+    .menu-card:hover { border-color: #ff8800; }
+
     .logout-container { padding: 20px 15px; border-top: 1px solid #eee; }
     .btn-logout { width: 100%; background: #fee; color: #d32f2f; border: 1px solid #ffcdd2; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+    /* --- LAYOUT --- */
     .main-layout { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; gap: 20px; box-sizing: border-box; max-width: 1200px; margin: 0 auto; width: 100%; }
     .grid-container { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
     @media (min-width: 768px) { .grid-container { grid-template-columns: 1fr 1fr; } .card-full { grid-column: span 2; } }
+
     .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); text-align: center; }
     .valeur { font-size: 3rem; font-weight: bold; color: #ff8800; margin: 10px 0; }
     .label { font-size: 1.1rem; color: #666; font-weight: bold; }
-    #btn-lampe { width: 100%; padding: 20px; border-radius: 15px; border: none; font-size: 1.3rem; font-weight: bold; cursor: pointer; background-color: #ff8800; color: white; }
+    #btn-lampe { width: 100%; padding: 20px; border-radius: 15px; border: none; font-size: 1.3rem; font-weight: bold; cursor: pointer; background-color: #ff8800; color: white; transition: 0.3s; }
     #btn-lampe.on { background-color: #4caf50; }
 
-    /* Mode Nuit */
+    /* --- MODE NUIT (IDENTIQUE AVANT) --- */
     body.nuit { background-color: #1a1a1a !important; color: white; }
     body.nuit .card { background-color: #2c2c2c; color: white; border: 1px solid #444; }
     body.nuit .label { color: #aaa; }
@@ -55,7 +64,7 @@
     </div>
   </div>
 
-  <div class="main-layout">
+  <div class="main-layout" id="main-content" style="display:none;">
     <div class="grid-container">
       <div class="card">
         <div class="label">🌡️ EXTÉRIEUR</div>
@@ -75,7 +84,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getDatabase, ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { getDatabase, ref, onValue, get, set, update, off } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
   const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
@@ -85,28 +94,36 @@
   document.getElementById("open-drawer").onclick = () => { dr.style.width = "280px"; ov.style.display = "block"; };
   ov.onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
-  // --- PROTECTION DE LA PAGE ---
-  onAuthStateChanged(auth, u => {
+  // --- LOGIQUE DE SÉCURITÉ ---
+  onAuthStateChanged(auth, (u) => {
     if (!u) {
-      window.location.href = "auth.html"; // Pas connecté ? -> Retour au login
+      window.location.href = "auth.html";
     } else {
-      onValue(ref(db, `users/${u.uid}`), (s) => { 
-        if(s.exists()){ 
-          document.body.className = s.val().theme; 
-          document.getElementById("admin-link").style.display = s.val().role === "admin" ? "flex" : "none"; 
-        } 
+      // VÉRIFICATION DE L'EXISTENCE EN BASE (Sécurité contre suppression admin)
+      const userRef = ref(db, `users/${u.uid}`);
+      onValue(userRef, (snapshot) => {
+        if (!snapshot.exists()) {
+          // Si le profil n'existe plus en base, on le déconnecte proprement
+          signOut(auth).then(() => { window.location.href = "auth.html"; });
+        } else {
+          // L'utilisateur est valide
+          const userData = snapshot.val();
+          document.body.className = userData.theme || "jour";
+          document.getElementById("admin-link").style.display = userData.role === "admin" ? "flex" : "none";
+          document.getElementById("main-content").style.display = "flex";
+          loadData();
+        }
       });
-      loadData();
     }
   });
 
   function loadData() {
     onValue(ref(db, "capteurs"), s => {
       const d = s.val(); if(!d) return;
-      document.getElementById("temp-ext").textContent = d.exterieur?.temperature || "--";
-      document.getElementById("hum-ext").textContent = d.exterieur?.humidite || "--";
-      document.getElementById("temp-int").textContent = d.interieur?.temperature || "--";
-      document.getElementById("hum-int").textContent = d.interieur?.humidite || "--";
+      document.getElementById("temp-ext").textContent = d.exterieur?.temperature ?? "--";
+      document.getElementById("hum-ext").textContent = d.exterieur?.humidite ?? "--";
+      document.getElementById("temp-int").textContent = d.interieur?.temperature ?? "--";
+      document.getElementById("hum-int").textContent = d.interieur?.humidite ?? "--";
     });
 
     onValue(ref(db, "commande/lampe"), s => {
@@ -116,11 +133,18 @@
     });
   }
 
-  document.getElementById("btn-lampe").onclick = async () => { const s = await get(ref(db, "commande/lampe")); set(ref(db, "commande/lampe"), !s.val()); };
+  document.getElementById("btn-lampe").onclick = async () => { 
+    const s = await get(ref(db, "commande/lampe")); 
+    set(ref(db, "commande/lampe"), !s.val()); 
+  };
+
   document.getElementById("btn-logout").onclick = () => signOut(auth);
+  
   document.getElementById("mode-btn-toggle").onclick = async () => {
     const s = await get(ref(db, `users/${auth.currentUser.uid}`));
-    update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" });
+    if(s.exists()){
+      update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" });
+    }
   };
 </script>
 </body>
