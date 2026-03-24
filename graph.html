@@ -2,107 +2,143 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Analyses - Station Météo</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { padding-top: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; transition: 0.3s; background-color: #fff3e0; font-family: sans-serif; }
+    /* Verrouillage du scroll et plein écran */
+    html, body { 
+      margin: 0; padding: 0; height: 100vh; width: 100vw; 
+      overflow: hidden; font-family: sans-serif;
+    }
     
-    .config-panel { 
-      background: white; padding: 25px; border-radius: 15px; 
-      width: 90%; max-width: 650px; margin-bottom: 20px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: flex; flex-direction: column; align-items: center; text-align: center;
+    body {
+      display: flex; flex-direction: column;
+      background-color: #fff3e0; transition: 0.3s;
+      padding-top: 60px; /* Espace pour la Top Bar */
+      box-sizing: border-box;
     }
 
-    /* Boutons de période temporelle */
-    .time-filters { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; }
+    /* TOP BAR (Identique au Dashboard) */
+    .top-bar {
+      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+      background-color: #ff8800; color: white; display: flex;
+      align-items: center; justify-content: space-between; padding: 0 20px;
+      box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 30px; height: 20px; background: transparent; border: none; padding: 0; }
+    .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
+
+    /* DRAWER (Menu latéral) */
+    .drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #ffe082; overflow-x: hidden; transition: 0.4s; display: flex; flex-direction: column; box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
+    .drawer-content { display: flex; flex-direction: column; height: 100%; padding-top: 60px; }
+    .drawer a, .drawer button { padding: 20px; text-decoration: none; font-size: 18px; color: #333; border: none; background: none; text-align: left; cursor: pointer; }
+    .close-btn { position: absolute; top: 15px; left: 15px; font-size: 35px; cursor: pointer; }
+    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
+
+    /* CONTENU PRINCIPAL (Organisation flexible) */
+    .main-layout {
+      flex: 1; display: flex; flex-direction: column;
+      padding: 10px; gap: 10px; box-sizing: border-box;
+      max-height: calc(100vh - 60px);
+    }
+
+    .config-panel { 
+      background: white; padding: 12px; border-radius: 12px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    .time-filters { display: flex; gap: 5px; margin-bottom: 10px; }
     .time-filters button { 
-      padding: 8px 18px; border: 2px solid #ff8800; background: white; 
-      color: #ff8800; cursor: pointer; border-radius: 25px; font-weight: bold; transition: 0.2s;
+      padding: 6px 12px; border: 1.5px solid #ff8800; background: white; 
+      color: #ff8800; cursor: pointer; border-radius: 15px; font-size: 0.8rem; font-weight: bold;
     }
     .time-filters button.active { background: #ff8800; color: white; }
-    .time-filters button:hover { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
-    /* Zone réglage fréquence */
-    .freq-zone { width: 100%; border-top: 1px solid #eee; pt: 15px; display: flex; flex-direction: column; align-items: center; }
-    #interval-range { width: 100%; max-width: 450px; margin: 15px 0; cursor: pointer; accent-color: #ff8800; }
-    
-    #btn-validate-interval { 
-      width: 100%; max-width: 320px; background-color: #4caf50; color:white; 
-      border:none; padding:12px; border-radius:10px; cursor:pointer; font-weight:bold; font-size: 1rem;
-    }
+    .freq-zone { width: 100%; display: flex; align-items: center; gap: 10px; justify-content: center; font-size: 0.85rem; border-top: 1px solid #eee; pt: 8px; }
+    #interval-range { flex: 1; max-width: 200px; accent-color: #ff8800; }
+    #btn-validate-interval { background: #4caf50; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
 
+    /* ZONE GRAPHIQUE (Prend tout l'espace restant) */
     .chart-container { 
-      background: white; padding: 20px; border-radius: 15px; 
-      width: 95%; max-width: 950px; height: 480px; 
-      box-shadow: 0 6px 20px rgba(0,0,0,0.15); margin-bottom: 25px;
+      flex: 1; background: white; padding: 10px; border-radius: 15px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-height: 0; /* Important pour flex */
     }
 
+    /* MODE NUIT */
     body.nuit { background-color: #1a1a1a !important; color: white; }
     body.nuit .config-panel, body.nuit .chart-container { background-color: #333; color: white; border: 1px solid #444; }
-    
-    .back-btn { background-color: #ff8800; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; text-decoration: none; transition: 0.2s; }
-    .back-btn:hover { background-color: #e67a00; }
+    body.nuit .drawer { background-color: #222; }
+    body.nuit .drawer a, body.nuit .drawer button { color: #eee; }
   </style>
 </head>
 <body>
 
-  <h1>Analyse Historique</h1>
+  <div id="overlay"></div>
 
-  <div class="config-panel">
-    <label style="margin-bottom: 10px; display: block;">Période d'affichage :</label>
-    <div class="time-filters" id="filters">
-      <button data-ms="3600000">1H</button>
-      <button data-ms="86400000">1J</button>
-      <button data-ms="2592000000">1M</button>
-      <button data-ms="31536000000">1Y</button>
-      <button data-ms="0" class="active">TOUT</button>
+  <div class="top-bar">
+    <span style="font-weight:bold; font-size:1.1rem;">📈 Analyses Historiques</span>
+    <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
+  </div>
+
+  <div id="myDrawer" class="drawer">
+    <span class="close-btn" id="close-drawer">&times;</span>
+    <div class="drawer-content">
+      <a href="index.html">🏠 Dashboard</a>
+      <a href="admin.html" id="admin-link" style="display:none;">🔑 Administration</a>
+      <button id="mode-btn-toggle">🌙 Mode Nuit</button>
+      <button id="btn-logout" style="margin-top:auto; color:red; font-weight:bold; border-top:1px solid #ff8800;">🚪 Déconnexion</button>
     </div>
+  </div>
 
-    <div class="freq-zone">
-      <div style="font-size: 0.9rem; margin-bottom: 5px;">
-        Fréquence actuelle : <span id="current-active-val" style="color:#ff8800; font-weight:bold;">--</span>
+  <div class="main-layout">
+    
+    <div class="config-panel">
+      <div class="time-filters" id="filters">
+        <button data-ms="3600000">1H</button>
+        <button data-ms="86400000">1J</button>
+        <button data-ms="2592000000">1M</button>
+        <button data-ms="31536000000">1Y</button>
+        <button data-ms="0" class="active">TOUT</button>
       </div>
-      <label>Régler : <span id="interval-preview-val" style="color:#ff8800; font-weight:bold;">--</span></label>
-      <input type="range" id="interval-range" min="10" max="600" step="10">
-      <button id="btn-validate-interval">Appliquer à l'ESP32</button>
+
+      <div class="freq-zone">
+        <span>MàJ : <b id="current-active-val">--</b></span>
+        <input type="range" id="interval-range" min="10" max="600" step="10">
+        <span id="interval-preview-val">--</span>
+        <button id="btn-validate-interval">OK</button>
+      </div>
     </div>
-  </div>
 
-  <div class="chart-container">
-    <canvas id="mainChart"></canvas>
-  </div>
+    <div class="chart-container">
+      <canvas id="mainChart"></canvas>
+    </div>
 
-  <a href="index.html" class="back-btn">Retour au Dashboard</a>
+  </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set, query, orderByChild, startAt } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getDatabase, ref, onValue, set, get, update, query, orderByChild, startAt } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
   const firebaseConfig = { 
-    apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", 
-    authDomain: "projetfakirradio.firebaseapp.com", 
+    apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", 
     databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", 
-    projectId: "projetfakirradio", 
-    storageBucket: "projetfakirradio.firebasestorage.app", 
-    messagingSenderId: "363899261538", 
-    appId: "1:363899261538:web:ad30da02b1485f5c2d373b" 
+    projectId: "projetfakirradio", storageBucket: "projetfakirradio.firebasestorage.app", 
+    messagingSenderId: "363899261538", appId: "1:363899261538:web:ad30da02b1485f5c2d373b" 
   };
   
   const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
-  // --- CONFIG FORMATAGE FRÉQUENCE ---
-  const formatFrequence = (s) => {
-    if (s < 60) return s + " sec";
-    const min = Math.floor(s / 60);
-    const sec = s % 60;
-    return sec > 0 ? `${min} min ${sec}` : `${min} min`;
-  };
+  // --- MENU DRAWER ---
+  const dr = document.getElementById("myDrawer"), ov = document.getElementById("overlay");
+  document.getElementById("open-drawer").onclick = () => { dr.style.width = "250px"; ov.style.display = "block"; };
+  document.getElementById("close-drawer").onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
+  ov.onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
-  // --- INITIALISATION GRAPHIQUE ---
+  // --- CHART ---
   const ctx = document.getElementById('mainChart').getContext('2d');
   const mainChart = new Chart(ctx, {
     type: 'line',
@@ -115,44 +151,42 @@
     options: { 
       responsive: true, maintainAspectRatio: false,
       scales: { 
-        y: { position: 'left', title: {display:true, text:'Temp (°C)'}},
-        y1: { position: 'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Hum (%)'}}
+        y: { position: 'left' },
+        y1: { position: 'right', grid:{drawOnChartArea:false} }
       }
     }
   });
 
-  // --- FILTRAGE TEMPOREL ---
+  // --- LOGIQUE DONNÉES ---
+  const formatFrequence = (s) => s < 60 ? s+"s" : Math.floor(s/60)+"m"+(s%60||"");
   let unsubscribe = null;
+
   function chargerDonnees(periodeMs) {
     if (unsubscribe) unsubscribe();
-
-    let maRequete;
-    if (periodeMs === 0) {
-      maRequete = query(ref(db, "historique"), orderByChild("timestamp"));
-    } else {
-      const tempsLimite = Date.now() - periodeMs;
-      maRequete = query(ref(db, "historique"), orderByChild("timestamp"), startAt(tempsLimite));
-    }
-
-    unsubscribe = onValue(maRequete, (snap) => {
-      const d = snap.val(); 
-      if (!d) { mainChart.data.labels = []; mainChart.update(); return; }
-      
+    let qry = periodeMs === 0 ? query(ref(db, "historique"), orderByChild("timestamp")) : query(ref(db, "historique"), orderByChild("timestamp"), startAt(Date.now() - periodeMs));
+    unsubscribe = onValue(qry, (snap) => {
+      const d = snap.val(); if (!d) return;
       const labels = [], tE = [], hE = [], tI = [], hI = [];
       Object.keys(d).sort((a,b) => d[a].timestamp - d[b].timestamp).forEach(key => {
-        const p = d[key];
-        labels.push(p.temps); 
-        tE.push(p.tempExt); hE.push(p.humExt); 
-        tI.push(p.tempInt); hI.push(p.humInt);
+        labels.push(d[key].temps); tE.push(d[key].tempExt); hE.push(d[key].humExt); tI.push(d[key].tempInt); hI.push(d[key].humInt);
       });
-      mainChart.data.labels = labels;
-      mainChart.data.datasets[0].data = tE; mainChart.data.datasets[1].data = hE;
-      mainChart.data.datasets[2].data = tI; mainChart.data.datasets[3].data = hI;
+      mainChart.data.labels = labels; mainChart.data.datasets[0].data = tE; mainChart.data.datasets[1].data = hE; mainChart.data.datasets[2].data = tI; mainChart.data.datasets[3].data = hI;
       mainChart.update();
     });
   }
 
-  // --- EVENTS FILTRES ---
+  // --- ACTIONS ---
+  onAuthStateChanged(auth, (u) => {
+    if (!u) window.location.href = "index.html";
+    onValue(ref(db, `users/${u.uid}`), (s) => { 
+      if(s.exists()){ 
+        document.body.className = s.val().theme;
+        document.getElementById("admin-link").style.display = s.val().role === "admin" ? "block" : "none";
+      }
+    });
+    chargerDonnees(0);
+  });
+
   document.getElementById('filters').onclick = (e) => {
     if (e.target.tagName === 'BUTTON') {
       document.querySelectorAll('#filters button').forEach(b => b.classList.remove('active'));
@@ -161,28 +195,15 @@
     }
   };
 
-  // --- AUTH & THÈME ---
-  onAuthStateChanged(auth, (u) => {
-    if (!u) window.location.href = "index.html";
-    onValue(ref(db, `users/${u.uid}`), (s) => { if(s.exists()) document.body.className = s.val().theme; });
-    chargerDonnees(0); 
-  });
-
-  // --- LOGIQUE FRÉQUENCE ---
-  const range = document.getElementById('interval-range'), 
-        preview = document.getElementById('interval-preview-val'), 
-        activeDisp = document.getElementById('current-active-val');
-
-  onValue(ref(db, "config/intervalle_sec"), (s) => {
-      const v = s.val() || 300;
-      activeDisp.textContent = formatFrequence(v);
-      preview.textContent = formatFrequence(v);
-      range.value = v;
-  });
-
+  const range = document.getElementById('interval-range'), preview = document.getElementById('interval-preview-val'), activeDisp = document.getElementById('current-active-val');
+  onValue(ref(db, "config/intervalle_sec"), (s) => { activeDisp.textContent = formatFrequence(s.val()); range.value = s.val(); preview.textContent = formatFrequence(s.val()); });
   range.oninput = () => preview.textContent = formatFrequence(parseInt(range.value));
   document.getElementById('btn-validate-interval').onclick = () => set(ref(db, "config/intervalle_sec"), parseInt(range.value));
-
+  document.getElementById("btn-logout").onclick = () => signOut(auth);
+  document.getElementById("mode-btn-toggle").onclick = async () => {
+    const s = await get(ref(db, `users/${auth.currentUser.uid}`));
+    update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" });
+  };
 </script>
 </body>
 </html>
