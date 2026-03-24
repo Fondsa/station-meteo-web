@@ -7,64 +7,38 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { padding-top: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    body { padding-top: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; transition: 0.3s; }
     .config-panel { background: white; padding: 15px; border-radius: 12px; width: 90%; max-width: 800px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .chart-container { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 850px; height: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .chart-container { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 900px; height: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
     body.nuit { background-color: #1a1a1a !important; color: white; }
-    body.nuit .config-panel, body.nuit .chart-container { background-color: #333; color: white; }
+    body.nuit .config-panel, body.nuit .chart-container { background-color: #333; color: white; border: 1px solid #444; }
   </style>
 </head>
 <body>
-  <h1>Analyse des Données</h1>
-
+  <h1>Analyse Historique</h1>
   <div class="config-panel">
-    <div style="margin-bottom: 10px; font-size: 0.9rem;">
-      Fréquence active : <span id="current-active-val" style="font-weight:bold; color:#ff8800;">--</span>
-    </div>
-    <label>Régler fréquence : <span id="interval-preview-val" style="font-weight:bold;">5 min</span></label>
+    <div style="margin-bottom: 10px;">Fréquence active : <span id="current-active-val" style="font-weight:bold; color:#ff8800;">--</span></div>
+    <label>Régler : <span id="interval-preview-val">5 min</span></label>
     <input type="range" id="interval-range" min="10" max="600" step="10" value="300" style="width: 100%; margin: 10px 0;">
-    <button id="btn-validate-interval" style="width: 100%; background-color: #4caf50;">Appliquer la fréquence</button>
-    
+    <button id="btn-validate-interval" style="width: 100%; background-color: #4caf50;">Appliquer</button>
     <div class="checkbox-group">
-      <label><input type="checkbox" id="check-temp-ext" checked> Temp. Ext</label>
-      <label><input type="checkbox" id="check-hum-ext" checked> Hum. Ext</label>
-      <label><input type="checkbox" id="check-temp-int" checked> Temp. Int</label>
-      <label><input type="checkbox" id="check-hum-int" checked> Hum. Int</label>
+      <label><input type="checkbox" id="check-temp-ext" checked> Temp Ext</label>
+      <label><input type="checkbox" id="check-hum-ext" checked> Hum Ext</label>
+      <label><input type="checkbox" id="check-temp-int" checked> Temp Int</label>
+      <label><input type="checkbox" id="check-hum-int" checked> Hum Int</label>
     </div>
   </div>
-
   <div class="chart-container"><canvas id="mainChart"></canvas></div>
-  <div class="card"><button onclick="window.location.href='index.html'">Retour au Dashboard</button></div>
+  <div class="card"><button onclick="window.location.href='index.html'">Retour</button></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getDatabase, ref, onValue, set, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
-    authDomain: "projetfakirradio.firebaseapp.com",
-    databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "projetfakirradio",
-    storageBucket: "projetfakirradio.firebasestorage.app",
-    messagingSenderId: "363899261538",
-    appId: "1:363899261538:web:ad30da02b1485f5c2d373b"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const auth = getAuth(app);
-
-  const formatAff = (s) => s < 60 ? s + " sec" : Math.floor(s/60) + " min " + (s%60 || "");
-  const range = document.getElementById('interval-range'), preview = document.getElementById('interval-preview-val'), activeDisp = document.getElementById('current-active-val');
-
-  onValue(ref(db, "config/intervalle_sec"), (s) => {
-    const v = s.val() || 300;
-    activeDisp.textContent = formatAff(v);
-  });
-  range.oninput = () => preview.textContent = formatAff(parseInt(range.value));
-  document.getElementById('btn-validate-interval').onclick = () => set(ref(db, "config/intervalle_sec"), parseInt(range.value));
+  const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio", storageBucket: "projetfakirradio.firebasestorage.app", messagingSenderId: "363899261538", appId: "1:363899261538:web:ad30da02b1485f5c2d373b" };
+  const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
   const ctx = document.getElementById('mainChart').getContext('2d');
   const mainChart = new Chart(ctx, {
@@ -76,18 +50,19 @@
       { label: 'Hum Int', data: [], borderColor: '#2ecc71', yAxisID: 'y1' }
     ]},
     options: { responsive: true, maintainAspectRatio: false, scales: { 
-      y: { type: 'linear', position: 'left', title:{display:true, text:'Temp (°C)'}},
-      y1: { type: 'linear', position: 'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Hum (%)'}}
+      y: { position: 'left', title: {display:true, text:'Temp (°C)'}},
+      y1: { position: 'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Hum (%)'}}
     }}
   });
 
-  const setupToggle = (id, idx) => document.getElementById(id).onchange = (e) => { mainChart.setDatasetVisibility(idx, e.target.checked); mainChart.update(); };
-  ['check-temp-ext','check-hum-ext','check-temp-int','check-hum-int'].forEach((id, i) => setupToggle(id, i));
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user) window.location.href = "index.html";
-    onValue(ref(db, `users/${user.uid}`), (snap) => { if(snap.exists()) document.body.className = snap.val().theme; });
+  onAuthStateChanged(auth, (u) => {
+    if (!u) window.location.href = "index.html";
+    onValue(ref(db, `users/${u.uid}`), (s) => { if(s.exists()) document.body.className = s.val().theme; });
   });
+
+  const range = document.getElementById('interval-range'), activeDisp = document.getElementById('current-active-val');
+  onValue(ref(db, "config/intervalle_sec"), (s) => activeDisp.textContent = s.val() + " sec");
+  document.getElementById('btn-validate-interval').onclick = () => set(ref(db, "config/intervalle_sec"), parseInt(range.value));
 
   onValue(query(ref(db, "historique"), limitToLast(50)), (snap) => {
     const d = snap.val(); if (!d) return;
@@ -96,6 +71,9 @@
     mainChart.data.labels = labels; mainChart.data.datasets[0].data = tE; mainChart.data.datasets[1].data = hE; mainChart.data.datasets[2].data = tI; mainChart.data.datasets[3].data = hI;
     mainChart.update();
   });
+  
+  const setupToggle = (id, idx) => document.getElementById(id).onchange = (e) => { mainChart.setDatasetVisibility(idx, e.target.checked); mainChart.update(); };
+  ['check-temp-ext','check-hum-ext','check-temp-int','check-hum-int'].forEach((id, i) => setupToggle(id, i));
 </script>
 </body>
 </html>
