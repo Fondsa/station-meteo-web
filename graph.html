@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Graphiques - Station Météo</title>
+  <title>Analyses - Station Météo</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { padding-top: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; transition: 0.3s; }
+    body { padding-top: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; transition: 0.3s; background-color: #fff3e0; }
     .config-panel { background: white; padding: 15px; border-radius: 12px; width: 90%; max-width: 800px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .chart-container { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 900px; height: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
@@ -18,10 +18,10 @@
 <body>
   <h1>Analyse Historique</h1>
   <div class="config-panel">
-    <div style="margin-bottom: 10px;">Fréquence active : <span id="current-active-val" style="font-weight:bold; color:#ff8800;">--</span></div>
-    <label>Régler : <span id="interval-preview-val">5 min</span></label>
+    <div style="margin-bottom: 10px;">Fréquence ESP32 active : <span id="current-active-val" style="font-weight:bold; color:#ff8800;">--</span></div>
+    <label>Régler : <span id="interval-preview-val">--</span></label>
     <input type="range" id="interval-range" min="10" max="600" step="10" value="300" style="width: 100%; margin: 10px 0;">
-    <button id="btn-validate-interval" style="width: 100%; background-color: #4caf50;">Appliquer</button>
+    <button id="btn-validate-interval" style="width: 100%; background-color: #4caf50; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Appliquer à l'ESP32</button>
     <div class="checkbox-group">
       <label><input type="checkbox" id="check-temp-ext" checked> Temp Ext</label>
       <label><input type="checkbox" id="check-hum-ext" checked> Hum Ext</label>
@@ -30,7 +30,7 @@
     </div>
   </div>
   <div class="chart-container"><canvas id="mainChart"></canvas></div>
-  <div class="card"><button onclick="window.location.href='index.html'">Retour</button></div>
+  <div class="card"><button onclick="window.location.href='index.html'">Retour au Dashboard</button></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -44,15 +44,18 @@
   const mainChart = new Chart(ctx, {
     type: 'line',
     data: { labels: [], datasets: [
-      { label: 'Temp Ext', data: [], borderColor: '#ff8800', yAxisID: 'y' },
-      { label: 'Hum Ext', data: [], borderColor: '#3498db', yAxisID: 'y1' },
-      { label: 'Temp Int', data: [], borderColor: '#e74c3c', yAxisID: 'y' },
-      { label: 'Hum Int', data: [], borderColor: '#2ecc71', yAxisID: 'y1' }
+      { label: 'Temp Ext', data: [], borderColor: '#ff8800', tension: 0.3 },
+      { label: 'Hum Ext', data: [], borderColor: '#3498db', yAxisID: 'y1', tension: 0.3 },
+      { label: 'Temp Int', data: [], borderColor: '#e74c3c', tension: 0.3 },
+      { label: 'Hum Int', data: [], borderColor: '#2ecc71', yAxisID: 'y1', tension: 0.3 }
     ]},
-    options: { responsive: true, maintainAspectRatio: false, scales: { 
-      y: { position: 'left', title: {display:true, text:'Temp (°C)'}},
-      y1: { position: 'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Hum (%)'}}
-    }}
+    options: { 
+      responsive: true, maintainAspectRatio: false, 
+      scales: { 
+        y: { position: 'left', title: {display:true, text:'Temp (°C)'}},
+        y1: { position: 'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Hum (%)'}}
+      }
+    }
   });
 
   onAuthStateChanged(auth, (u) => {
@@ -60,14 +63,27 @@
     onValue(ref(db, `users/${u.uid}`), (s) => { if(s.exists()) document.body.className = s.val().theme; });
   });
 
-  const range = document.getElementById('interval-range'), activeDisp = document.getElementById('current-active-val');
-  onValue(ref(db, "config/intervalle_sec"), (s) => activeDisp.textContent = s.val() + " sec");
+  const range = document.getElementById('interval-range'), preview = document.getElementById('interval-preview-val'), activeDisp = document.getElementById('current-active-val');
+  const formatS = (s) => s < 60 ? s + " sec" : Math.floor(s/60) + " min " + (s%60 || "");
+
+  onValue(ref(db, "config/intervalle_sec"), (s) => {
+      const v = s.val() || 300;
+      activeDisp.textContent = formatS(v);
+      preview.textContent = formatS(v);
+      range.value = v;
+  });
+
+  range.oninput = () => preview.textContent = formatS(parseInt(range.value));
   document.getElementById('btn-validate-interval').onclick = () => set(ref(db, "config/intervalle_sec"), parseInt(range.value));
 
+  // RÉCUPÉRATION DES DONNÉES ENVOYÉES PAR L'ESP32
   onValue(query(ref(db, "historique"), limitToLast(50)), (snap) => {
     const d = snap.val(); if (!d) return;
     const labels = [], tE = [], hE = [], tI = [], hI = [];
-    Object.values(d).forEach(p => { labels.push(p.temps); tE.push(p.tempExt); hE.push(p.humExt); tI.push(p.tempInt); hI.push(p.humInt); });
+    Object.keys(d).sort().forEach(key => { 
+        const p = d[key];
+        labels.push(p.temps); tE.push(p.tempExt); hE.push(p.humExt); tI.push(p.tempInt); hI.push(p.humInt); 
+    });
     mainChart.data.labels = labels; mainChart.data.datasets[0].data = tE; mainChart.data.datasets[1].data = hE; mainChart.data.datasets[2].data = tI; mainChart.data.datasets[3].data = hI;
     mainChart.update();
   });
