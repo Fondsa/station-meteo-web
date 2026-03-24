@@ -25,20 +25,50 @@
       margin: 10px; 
       border-radius: 8px; 
       width: 90%; 
-      max-width: 400px; 
+      max-width: 450px; 
       box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
       border-left: 5px solid #ff8800; 
       transition: background-color 0.3s, color 0.3s;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
     }
 
     .btn-del { 
       background: #ff4444; 
       color: white; 
       border: none; 
-      padding: 10px; 
+      padding: 8px 12px; 
       border-radius: 5px; 
       cursor: pointer; 
       font-weight: bold;
+      font-size: 14px;
+    }
+
+    .btn-promo { 
+      background: #4caf50; 
+      color: white; 
+      border: none; 
+      padding: 8px 12px; 
+      border-radius: 5px; 
+      cursor: pointer; 
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .btn-demote { 
+      background: #2196f3; 
+      color: white; 
+      border: none; 
+      padding: 8px 12px; 
+      border-radius: 5px; 
+      cursor: pointer; 
+      font-weight: bold;
+      font-size: 14px;
     }
 
     /* --- MODE NUIT ADMIN --- */
@@ -60,7 +90,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { getDatabase, ref, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -77,26 +107,23 @@
   const db = getDatabase(app);
   const auth = getAuth(app);
 
+  let currentAdminUid = "";
+
   // --- SURVEILLANCE AUTH & THÈME ---
   onAuthStateChanged(auth, async (user) => {
     if (!user) { 
       window.location.href = "index.html"; 
       return; 
     }
+    currentAdminUid = user.uid;
 
-    // On écoute en temps réel les infos de l'utilisateur connecté (Rôle + Thème)
     onValue(ref(db, `users/${user.uid}`), (snap) => {
       if (snap.exists()) {
         const userData = snap.val();
-
-        // 1. Sécurité : Si l'utilisateur n'est plus admin, on l'expulse
         if (userData.role !== "admin") {
           window.location.href = "index.html";
         }
-
-        // 2. Synchronisation du Thème
-        const currentTheme = userData.theme || "jour";
-        document.body.className = currentTheme;
+        document.body.className = userData.theme || "jour";
       } else {
         window.location.href = "index.html";
       }
@@ -115,19 +142,49 @@
       const u = users[uid];
       const div = document.createElement("div");
       div.className = "user-card";
+      
+      // On empêche l'admin de se modifier lui-même pour éviter les erreurs
+      const isSelf = (uid === currentAdminUid);
+
       div.innerHTML = `
         <p><strong>Email:</strong> ${u.email}</p>
-        <p><strong>Rôle:</strong> ${u.role}</p>
-        ${u.role !== 'admin' ? `<button class="btn-del" data-id="${uid}">Supprimer le compte</button>` : '<em>Compte Administrateur</em>'}
+        <p><strong>Rôle:</strong> <span style="text-transform: uppercase; font-weight: bold; color: ${u.role === 'admin' ? '#4caf50' : '#2196f3'}">${u.role}</span></p>
+        <div class="user-actions">
+          ${!isSelf && u.role === 'user' ? `<button class="btn-promo" data-id="${uid}">Promouvoir Admin</button>` : ''}
+          ${!isSelf && u.role === 'admin' ? `<button class="btn-demote" data-id="${uid}">Rétrograder User</button>` : ''}
+          ${!isSelf ? `<button class="btn-del" data-id="${uid}">Supprimer</button>` : '<em>(Vous êtes connecté)</em>'}
+        </div>
       `;
       container.appendChild(div);
     }
 
-    // Gestion de la suppression
+    // --- ACTIONS ---
+
+    // Promouvoir Admin
+    document.querySelectorAll(".btn-promo").forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute("data-id");
+        if(confirm("Promouvoir cet utilisateur en Administrateur ?")) {
+          update(ref(db, `users/${id}`), { role: "admin" });
+        }
+      };
+    });
+
+    // Rétrograder User
+    document.querySelectorAll(".btn-demote").forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute("data-id");
+        if(confirm("Rétrograder cet administrateur en simple utilisateur ?")) {
+          update(ref(db, `users/${id}`), { role: "user" });
+        }
+      };
+    });
+
+    // Supprimer
     document.querySelectorAll(".btn-del").forEach(btn => {
       btn.onclick = () => {
         const id = btn.getAttribute("data-id");
-        if(confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) {
+        if(confirm("Supprimer définitivement ce compte de la base ?")) {
           remove(ref(db, `users/${id}`));
         }
       };
