@@ -2,118 +2,191 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Station Météo - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Station Météo Pro</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* --- Styles pour le Layout --- */
-    #main-content, #menu-btn { display: none; } /* Caché par défaut */
-    
-    /* Barre du haut */
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    /* --- FIX DU FOND UNIFORME --- */
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh; /* Force la hauteur sur toute l'écran */
       width: 100%;
-      background: #ff8800;
-      color: white;
-      padding: 10px 20px;
-      position: fixed;
-      top: 0; left: 0;
-      z-index: 100;
     }
 
-    /* Icône Menu (3 traits) */
-    .menu-icon {
-      cursor: pointer;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    /* Drawer (Menu latéral) */
-    .drawer {
-      height: 100%;
-      width: 0;
-      position: fixed;
-      z-index: 200;
-      top: 0; right: 0;
-      background-color: #ffe082;
-      overflow-x: hidden;
-      transition: 0.5s;
-      padding-top: 60px;
-      box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+    body {
+      padding-top: 70px; /* Espace pour la top-bar */
       display: flex;
       flex-direction: column;
+      align-items: center;
+      /* Ton fond orange à rayures */
+      background-color: #fff3e0;
+      background-image: repeating-linear-gradient(
+        45deg,
+        rgba(255, 200, 100, 0.2) 0px,
+        rgba(255, 200, 100, 0.2) 20px,
+        transparent 20px,
+        transparent 40px
+      );
+      background-attachment: fixed; /* Le fond ne bouge pas au scroll */
+    }
+
+    /* --- TOP BAR --- */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background-color: #ff8800;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-sizing: border-box;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* --- BOUTON DRAWER (3 traits) --- */
+    .menu-btn {
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      width: 30px;
+      height: 25px;
+      background: transparent;
+      border: none;
+      z-index: 1001;
+    }
+    .menu-btn span {
+      width: 100%;
+      height: 3px;
+      background: white;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+
+    /* --- DRAWER --- */
+    .drawer {
+      height: 100%;
+      width: 0; /* Fermé par défaut */
+      position: fixed;
+      z-index: 2000;
+      top: 0;
+      right: 0;
+      background-color: #ffe082;
+      overflow-x: hidden;
+      transition: 0.5s ease;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+    }
+
+    .drawer-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding-top: 60px;
     }
 
     .drawer a, .drawer button {
-      padding: 15px 25px;
+      padding: 20px;
       text-decoration: none;
       font-size: 18px;
       color: #333;
       display: block;
-      transition: 0.3s;
-      background: none;
       border: none;
+      background: none;
       text-align: left;
       width: 100%;
       cursor: pointer;
+      font-family: inherit;
     }
 
-    .drawer a:hover, .drawer button:hover { background-color: #ffcc80; }
+    .drawer a:hover, .drawer button:hover {
+      background-color: #ffcc80;
+    }
 
-    .drawer .closebtn {
+    .close-btn {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 30px;
+      top: 15px;
+      left: 15px;
+      font-size: 35px;
+      cursor: pointer;
+      color: #333;
     }
 
-    .logout-box { margin-top: auto; border-top: 1px solid #ff8800; }
+    .logout-section {
+      margin-top: auto;
+      border-top: 1px solid #ff8800;
+    }
 
-    /* Ajustement pour le contenu avec la top-bar */
-    body { padding-top: 80px; }
-    
-    /* Mode sombre manuel pour le body */
-    body.nuit { background-color: #2c3e50 !important; color: white; background-image: none; }
-    body.nuit .card { background-color: #34495e; color: white; }
+    /* Overlay pour fermer le drawer en cliquant à côté */
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1500;
+    }
+
+    /* --- AUTRE --- */
+    #auth-section, #main-content {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
 
+  <div id="overlay"></div>
+
   <div class="top-bar" id="top-bar" style="display:none;">
-    <span>Ma Station Météo</span>
-    <div class="menu-icon" id="open-drawer">☰</div>
+    <span style="font-weight:bold; font-size:1.2rem;">Station Météo</span>
+    <button class="menu-btn" id="open-drawer">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </div>
 
   <div id="myDrawer" class="drawer">
-    <a href="javascript:void(0)" class="closebtn" id="close-drawer">&times;</a>
-    
-    <a href="#" id="link-graphs">📈 Graphiques (Bientôt)</a>
-    <a href="admin.html" id="admin-link" style="display:none;">🔑 Administration</a>
-    <button id="mode-btn">🌙 Mode Nuit</button>
-
-    <div class="logout-box">
-      <button id="btn-logout" style="color: red; font-weight: bold;">🚪 Déconnexion</button>
+    <span class="close-btn" id="close-drawer">&times;</span>
+    <div class="drawer-content">
+      <a href="admin.html" id="admin-link" style="display:none;">🔑 Administration</a>
+      <a href="#" id="link-graphs">📈 Graphiques</a>
+      <button id="mode-btn">🌙 Mode Nuit</button>
+      
+      <div class="logout-section">
+        <button id="btn-logout" style="color:red; font-weight:bold;">🚪 Déconnexion</button>
+      </div>
     </div>
   </div>
 
-  <div id="auth-section" class="card">
-    <h2>Connexion</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Mot de passe">
-    <button id="btn-login">Se connecter</button>
-    <button id="btn-signup" style="background-color: #555;">S'inscrire</button>
+  <div id="auth-section">
+    <div class="card">
+      <h2>Connexion</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Mot de passe">
+      <button id="btn-login">Se connecter</button>
+      <button id="btn-signup" style="background-color: #555;">S'inscrire</button>
+    </div>
   </div>
 
-  <div id="main-content">
+  <div id="main-content" style="display:none;">
     <div class="card">
       <h2>Capteurs</h2>
       <p>Extérieur : <span id="temp-ext">--</span> °C | <span id="hum-ext">--</span> %</p>
       <p>Intérieur : <span id="temp-int">--</span> °C | <span id="hum-int">--</span> %</p>
     </div>
-
     <div class="card">
-      <h2>Actionneurs</h2>
+      <h2>Commandes</h2>
       <button id="btn-lampe">Chargement...</button>
     </div>
   </div>
@@ -137,15 +210,21 @@
   const db = getDatabase(app);
   const auth = getAuth(app);
 
-  // --- GESTION DU DRAWER ---
+  // --- LOGIQUE DRAWER ---
   const drawer = document.getElementById("myDrawer");
-  document.getElementById("open-drawer").onclick = () => drawer.style.width = "250px";
-  document.getElementById("close-drawer").onclick = () => drawer.style.width = "0";
+  const overlay = document.getElementById("overlay");
+
+  const openNav = () => { drawer.style.width = "250px"; overlay.style.display = "block"; };
+  const closeNav = () => { drawer.style.width = "0"; overlay.style.display = "none"; };
+
+  document.getElementById("open-drawer").onclick = openNav;
+  document.getElementById("close-drawer").onclick = closeNav;
+  overlay.onclick = closeNav;
 
   // --- AUTHENTIFICATION ---
   document.getElementById("btn-login").onclick = () => {
     signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("password").value)
-      .catch(err => alert(err.message));
+      .catch(err => alert("Erreur: " + err.message));
   };
 
   document.getElementById("btn-signup").onclick = async () => {
@@ -156,39 +235,36 @@
     } catch (err) { alert(err.message); }
   };
 
-  document.getElementById("btn-logout").onclick = () => {
-    signOut(auth);
-    drawer.style.width = "0"; // Ferme le menu au logout
-  };
+  document.getElementById("btn-logout").onclick = () => { signOut(auth); closeNav(); };
 
-  // --- CHANGEMENT DE VUE (LOGGED IN / OUT) ---
   onAuthStateChanged(auth, async (user) => {
-    const authSection = document.getElementById("auth-section");
-    const mainContent = document.getElementById("main-content");
+    const authSect = document.getElementById("auth-section");
+    const mainSect = document.getElementById("main-content");
     const topBar = document.getElementById("top-bar");
     const adminLink = document.getElementById("admin-link");
 
     if (user) {
-      authSection.style.display = "none";
-      mainContent.style.display = "block";
+      authSect.style.display = "none";
+      mainSect.style.display = "flex";
       topBar.style.display = "flex";
-      
       const snap = await get(ref(db, `users/${user.uid}`));
       if (snap.exists() && snap.val().role === "admin") adminLink.style.display = "block";
     } else {
-      authSection.style.display = "block";
-      mainContent.style.display = "none";
+      authSect.style.display = "flex";
+      mainSect.style.display = "none";
       topBar.style.display = "none";
     }
   });
 
-  // --- DATA & BOUTONS ---
+  // --- DATA ---
   onValue(ref(db, "capteurs"), s => {
-    const data = s.val();
-    document.getElementById("temp-ext").textContent = data.exterieur.temperature;
-    document.getElementById("hum-ext").textContent = data.exterieur.humidite;
-    document.getElementById("temp-int").textContent = data.interieur.temperature;
-    document.getElementById("hum-int").textContent = data.interieur.humidite;
+    const d = s.val();
+    if(d) {
+      document.getElementById("temp-ext").textContent = d.exterieur?.temperature || "--";
+      document.getElementById("hum-ext").textContent = d.exterieur?.humidite || "--";
+      document.getElementById("temp-int").textContent = d.interieur?.temperature || "--";
+      document.getElementById("hum-int").textContent = d.interieur?.humidite || "--";
+    }
   });
 
   onValue(ref(db, "commande/lampe"), s => {
@@ -199,7 +275,6 @@
     set(ref(db, "commande/lampe"), !s.val());
   };
 
-  // Mode Jour/Nuit (dans le menu)
   onValue(ref(db, "ui/mode"), s => {
     const m = s.val() || "jour";
     document.body.className = m;
