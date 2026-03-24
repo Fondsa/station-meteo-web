@@ -6,20 +6,19 @@
   <title>Station Météo Pro</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* --- FIX DU FOND UNIFORME --- */
+    /* --- REGLAGE DU FOND --- */
     html, body {
       margin: 0;
       padding: 0;
-      min-height: 100vh; /* Force la hauteur sur toute l'écran */
+      min-height: 100vh;
       width: 100%;
     }
 
     body {
-      padding-top: 70px; /* Espace pour la top-bar */
+      padding-top: 80px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      /* Ton fond orange à rayures */
       background-color: #fff3e0;
       background-image: repeating-linear-gradient(
         45deg,
@@ -28,14 +27,14 @@
         transparent 20px,
         transparent 40px
       );
-      background-attachment: fixed; /* Le fond ne bouge pas au scroll */
+      background-attachment: fixed; /* Fond uniforme qui ne se coupe pas */
+      transition: background-color 0.3s;
     }
 
     /* --- TOP BAR --- */
     .top-bar {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       height: 60px;
       background-color: #ff8800;
@@ -46,40 +45,41 @@
       padding: 0 20px;
       box-sizing: border-box;
       z-index: 1000;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
 
-    /* --- BOUTON DRAWER (3 traits) --- */
+    /* --- ICONE MENU (3 TRAITS) --- */
     .menu-btn {
       cursor: pointer;
       display: flex;
       flex-direction: column;
-      justify-content: space-around;
-      width: 30px;
-      height: 25px;
+      justify-content: space-between;
+      width: 35px;
+      height: 22px;
       background: transparent;
       border: none;
+      padding: 0;
       z-index: 1001;
     }
+
     .menu-btn span {
+      display: block;
       width: 100%;
-      height: 3px;
-      background: white;
-      border-radius: 10px;
-      transition: 0.3s;
+      height: 4px; /* Épaisseur pour visibilité */
+      background-color: #ffffff; /* Couleur blanche forcée */
+      border-radius: 4px;
     }
 
     /* --- DRAWER --- */
     .drawer {
       height: 100%;
-      width: 0; /* Fermé par défaut */
+      width: 0;
       position: fixed;
       z-index: 2000;
-      top: 0;
-      right: 0;
+      top: 0; right: 0;
       background-color: #ffe082;
       overflow-x: hidden;
-      transition: 0.5s ease;
+      transition: 0.4s ease;
       display: flex;
       flex-direction: column;
       box-shadow: -5px 0 15px rgba(0,0,0,0.3);
@@ -97,34 +97,28 @@
       text-decoration: none;
       font-size: 18px;
       color: #333;
-      display: block;
       border: none;
       background: none;
       text-align: left;
       width: 100%;
       cursor: pointer;
-      font-family: inherit;
+      font-family: Arial, sans-serif;
     }
 
-    .drawer a:hover, .drawer button:hover {
-      background-color: #ffcc80;
-    }
+    .drawer a:hover, .drawer button:hover { background-color: #ffcc80; }
 
     .close-btn {
       position: absolute;
-      top: 15px;
-      left: 15px;
+      top: 15px; left: 15px;
       font-size: 35px;
       cursor: pointer;
-      color: #333;
     }
 
     .logout-section {
       margin-top: auto;
-      border-top: 1px solid #ff8800;
+      border-top: 2px solid #ff8800;
     }
 
-    /* Overlay pour fermer le drawer en cliquant à côté */
     #overlay {
       display: none;
       position: fixed;
@@ -134,13 +128,11 @@
       z-index: 1500;
     }
 
-    /* --- AUTRE --- */
-    #auth-section, #main-content {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    /* --- MODE NUIT --- */
+    body.nuit { background-color: #1a1a1a !important; background-image: none; color: white; }
+    body.nuit .card { background-color: #333; color: white; border: 1px solid #444; }
+    body.nuit .drawer { background-color: #222; }
+    body.nuit .drawer a, body.nuit .drawer button { color: #eee; }
   </style>
 </head>
 <body>
@@ -148,7 +140,7 @@
   <div id="overlay"></div>
 
   <div class="top-bar" id="top-bar" style="display:none;">
-    <span style="font-weight:bold; font-size:1.2rem;">Station Météo</span>
+    <span style="font-weight:bold; font-size:1.3rem;">Dashboard Météo</span>
     <button class="menu-btn" id="open-drawer">
       <span></span>
       <span></span>
@@ -160,9 +152,8 @@
     <span class="close-btn" id="close-drawer">&times;</span>
     <div class="drawer-content">
       <a href="admin.html" id="admin-link" style="display:none;">🔑 Administration</a>
-      <a href="#" id="link-graphs">📈 Graphiques</a>
+      <a href="#">📈 Graphiques</a>
       <button id="mode-btn">🌙 Mode Nuit</button>
-      
       <div class="logout-section">
         <button id="btn-logout" style="color:red; font-weight:bold;">🚪 Déconnexion</button>
       </div>
@@ -179,14 +170,14 @@
     </div>
   </div>
 
-  <div id="main-content" style="display:none;">
+  <div id="main-content" style="display:none; width: 100%; flex-direction: column; align-items: center;">
     <div class="card">
-      <h2>Capteurs</h2>
-      <p>Extérieur : <span id="temp-ext">--</span> °C | <span id="hum-ext">--</span> %</p>
-      <p>Intérieur : <span id="temp-int">--</span> °C | <span id="hum-int">--</span> %</p>
+      <h2>Capteurs Actuels</h2>
+      <p>🌡️ Extérieur : <span id="temp-ext">--</span> °C | <span id="hum-ext">--</span> %</p>
+      <p>🏠 Intérieur : <span id="temp-int">--</span> °C | <span id="hum-int">--</span> %</p>
     </div>
     <div class="card">
-      <h2>Commandes</h2>
+      <h2>Relais Extérieur</h2>
       <button id="btn-lampe">Chargement...</button>
     </div>
   </div>
@@ -210,7 +201,6 @@
   const db = getDatabase(app);
   const auth = getAuth(app);
 
-  // --- LOGIQUE DRAWER ---
   const drawer = document.getElementById("myDrawer");
   const overlay = document.getElementById("overlay");
 
@@ -221,7 +211,6 @@
   document.getElementById("close-drawer").onclick = closeNav;
   overlay.onclick = closeNav;
 
-  // --- AUTHENTIFICATION ---
   document.getElementById("btn-login").onclick = () => {
     signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("password").value)
       .catch(err => alert("Erreur: " + err.message));
@@ -238,32 +227,26 @@
   document.getElementById("btn-logout").onclick = () => { signOut(auth); closeNav(); };
 
   onAuthStateChanged(auth, async (user) => {
-    const authSect = document.getElementById("auth-section");
-    const mainSect = document.getElementById("main-content");
-    const topBar = document.getElementById("top-bar");
-    const adminLink = document.getElementById("admin-link");
-
     if (user) {
-      authSect.style.display = "none";
-      mainSect.style.display = "flex";
-      topBar.style.display = "flex";
+      document.getElementById("auth-section").style.display = "none";
+      document.getElementById("main-content").style.display = "flex";
+      document.getElementById("top-bar").style.display = "flex";
       const snap = await get(ref(db, `users/${user.uid}`));
-      if (snap.exists() && snap.val().role === "admin") adminLink.style.display = "block";
+      if (snap.exists() && snap.val().role === "admin") document.getElementById("admin-link").style.display = "block";
     } else {
-      authSect.style.display = "flex";
-      mainSect.style.display = "none";
-      topBar.style.display = "none";
+      document.getElementById("auth-section").style.display = "flex";
+      document.getElementById("main-content").style.display = "none";
+      document.getElementById("top-bar").style.display = "none";
     }
   });
 
-  // --- DATA ---
   onValue(ref(db, "capteurs"), s => {
     const d = s.val();
     if(d) {
-      document.getElementById("temp-ext").textContent = d.exterieur?.temperature || "--";
-      document.getElementById("hum-ext").textContent = d.exterieur?.humidite || "--";
-      document.getElementById("temp-int").textContent = d.interieur?.temperature || "--";
-      document.getElementById("hum-int").textContent = d.interieur?.humidite || "--";
+      document.getElementById("temp-ext").textContent = d.exterieur?.temperature ?? "--";
+      document.getElementById("hum-ext").textContent = d.exterieur?.humidite ?? "--";
+      document.getElementById("temp-int").textContent = d.interieur?.temperature ?? "--";
+      document.getElementById("hum-int").textContent = d.interieur?.humidite ?? "--";
     }
   });
 
@@ -284,7 +267,6 @@
     const s = await get(ref(db, "ui/mode"));
     set(ref(db, "ui/mode"), s.val() === "jour" ? "nuit" : "jour");
   };
-
 </script>
 </body>
 </html>
