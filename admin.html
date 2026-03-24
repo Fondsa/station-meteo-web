@@ -20,7 +20,7 @@
     .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 28px; height: 18px; background: transparent; border: none; padding: 0; }
     .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
 
-    /* --- DRAWER (Menu en Cartes) --- */
+    /* --- DRAWER --- */
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
     .drawer { 
       height: 100%; width: 0; position: fixed; z-index: 2000; 
@@ -29,71 +29,74 @@
       box-shadow: -5px 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; 
     }
     .drawer-content { flex: 1; display: flex; flex-direction: column; padding: 80px 15px 20px 15px; gap: 12px; width: 280px; box-sizing: border-box; }
-    
-    .menu-card { 
-      background: white; padding: 15px; border-radius: 12px; 
-      text-decoration: none; color: #333; font-weight: bold; 
-      display: flex; align-items: center; gap: 15px; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border: 1px solid transparent; 
-    }
-    .menu-card:hover { border-color: #ff8800; transform: translateY(-2px); }
-    
+    .menu-card { background: white; padding: 15px; border-radius: 12px; text-decoration: none; color: #333; font-weight: bold; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border: 1px solid transparent; }
     .logout-container { padding: 20px 15px; border-top: 1px solid #eee; }
-    .btn-logout { 
-      width: 100%; background: #fee; color: #d32f2f; border: 1px solid #ffcdd2; 
-      padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; 
-      display: flex; align-items: center; justify-content: center; gap: 10px; 
-    }
+    .btn-logout { width: 100%; background: #fee; color: #d32f2f; border: 1px solid #ffcdd2; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-    /* --- LAYOUT CONTENU --- */
+    /* --- LAYOUT CONTENU (Adaptatif) --- */
     .main-layout { 
-      flex: 1; display: flex; flex-direction: column; padding: 20px; 
-      gap: 20px; box-sizing: border-box; max-width: 1000px; 
+      flex: 1; display: flex; flex-direction: column; padding: 15px; 
+      gap: 15px; box-sizing: border-box; max-width: 900px; 
       margin: 0 auto; width: 100%; overflow-y: auto; 
     }
 
-    /* Carte des utilisateurs */
-    .admin-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 10px; }
-    h2 { margin-top: 0; color: #ff8800; font-size: 1.4rem; }
+    h2 { margin: 10px 0; color: #ff8800; font-size: 1.3rem; text-align: center; }
 
-    /* Liste des utilisateurs */
+    /* --- LISTE DES UTILISATEURS (Mobile First) --- */
+    #user-list { display: flex; flex-direction: column; gap: 10px; }
+
     .user-item { 
-      display: flex; justify-content: space-between; align-items: center; 
-      padding: 12px; border-bottom: 1px solid #eee; gap: 10px; 
+      background: white; padding: 15px; border-radius: 15px;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid transparent; transition: 0.3s;
     }
-    .user-info { display: flex; flex-direction: column; flex: 1; }
-    .user-email { font-weight: bold; font-size: 0.95rem; }
-    .user-role { font-size: 0.8rem; color: #666; }
 
-    /* Contrôles */
-    select { padding: 8px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; font-family: inherit; }
-    .btn-del { background: #fee; color: #d32f2f; border: 1px solid #ffcdd2; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .user-info { border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    .user-email { display: block; font-weight: bold; color: #333; word-break: break-all; }
+    .user-role { font-size: 0.85rem; color: #ff8800; font-weight: bold; margin-top: 4px; display: block; }
 
-    /* --- MODE NUIT (Harmonisé Dashboard/Graph) --- */
+    .user-actions { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+
+    /* --- CONTRÔLES --- */
+    select { 
+      flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; 
+      font-family: inherit; font-size: 0.9rem; background: #f9f9f9;
+    }
+    select:disabled { opacity: 0.6; cursor: not-allowed; background: #eee; }
+
+    .btn-del { 
+      background: #ff4444; color: white; border: none; 
+      width: 40px; height: 40px; border-radius: 8px; 
+      cursor: pointer; font-size: 1.1rem; display: flex; 
+      align-items: center; justify-content: center;
+    }
+    .btn-del:disabled { display: none; } /* On cache le bouton supprimer pour les admins */
+
+    /* --- RESPONSIVE PC --- */
+    @media (min-width: 600px) {
+      .user-item { flex-direction: row; align-items: center; justify-content: space-between; }
+      .user-info { border-bottom: none; padding-bottom: 0; }
+      .user-actions { justify-content: flex-end; width: 250px; }
+      h2 { text-align: left; }
+    }
+
+    /* --- MODE NUIT --- */
     body.nuit { background-color: #1a1a1a !important; color: white; }
-    body.nuit .admin-card { background-color: #2c2c2c; color: white; border: 1px solid #444; }
-    body.nuit .user-item { border-bottom-color: #444; }
-    body.nuit .user-role { color: #aaa; }
+    body.nuit .user-item { background-color: #2c2c2c; border-color: #444; }
+    body.nuit .user-email { color: #eee; }
+    body.nuit .user-info { border-bottom-color: #444; }
     body.nuit select { background: #333; color: white; border-color: #555; }
-    
     body.nuit .drawer { background-color: #222; }
-    body.nuit .menu-card { background-color: #333; color: white; box-shadow: none; border-color: #444; }
-    body.nuit .menu-card:hover { border-color: #ff8800; }
-    
-    body.nuit .logout-container { border-color: #444; }
+    body.nuit .menu-card { background-color: #333; color: white; border-color: #444; }
     body.nuit .btn-logout { background: #311; border-color: #522; color: #ff8080; }
-
-    /* Scrollbar pour PC en mode nuit */
-    body.nuit .main-layout::-webkit-scrollbar { width: 8px; }
-    body.nuit .main-layout::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
-
   </style>
 </head>
 <body>
 
   <div id="overlay"></div>
   <div class="top-bar">
-    <span style="font-weight:bold; font-size:1.2rem;">🔑 Administration</span>
+    <span style="font-weight:bold;">🔑 Admin</span>
     <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
   </div>
 
@@ -108,12 +111,10 @@
     </div>
   </div>
 
-  <div class="main-layout" id="admin-container">
-    <div class="admin-card">
-      <h2>Gestion des Utilisateurs</h2>
-      <div id="user-list">
-        <p style="text-align:center; color:#888;">Chargement des utilisateurs...</p>
-      </div>
+  <div class="main-layout">
+    <h2>Utilisateurs enregistrés</h2>
+    <div id="user-list">
+      <p style="text-align:center; color:#888; margin-top:50px;">Chargement...</p>
     </div>
   </div>
 
@@ -125,28 +126,20 @@
   const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
   const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
-  // --- DRAWER ---
   const dr = document.getElementById("myDrawer"), ov = document.getElementById("overlay");
   document.getElementById("open-drawer").onclick = () => { dr.style.width = "280px"; ov.style.display = "block"; };
   ov.onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
-  // --- AUTH & DROITS ---
   onAuthStateChanged(auth, u => {
-    if (!u) {
-      window.location.href = "index.html";
-    } else {
+    if (!u) { window.location.href = "index.html"; }
+    else {
       onValue(ref(db, `users/${u.uid}`), (s) => {
-        if (!s.exists() || s.val().role !== "admin") {
-          window.location.href = "index.html"; // Sécurité si non-admin
-        } else {
-          document.body.className = s.val().theme;
-          loadUsers();
-        }
+        if (!s.exists() || s.val().role !== "admin") { window.location.href = "index.html"; }
+        else { document.body.className = s.val().theme; loadUsers(); }
       });
     }
   });
 
-  // --- GESTION DES UTILISATEURS ---
   function loadUsers() {
     onValue(ref(db, "users"), (snap) => {
       const users = snap.val();
@@ -155,36 +148,30 @@
       
       for (let id in users) {
         const u = users[id];
+        const isAdmin = u.role === "admin";
+        
         const div = document.createElement("div");
         div.className = "user-item";
         div.innerHTML = `
           <div class="user-info">
             <span class="user-email">${u.email}</span>
-            <span class="user-role">Rôle : ${u.role}</span>
+            <span class="user-role">${u.role.toUpperCase()}</span>
           </div>
-          <select onchange="updateRole('${id}', this.value)">
-            <option value="user" ${u.role === 'user' ? 'selected' : ''}>Utilisateur</option>
-            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-          </select>
-          <button class="btn-del" onclick="deleteUser('${id}')">🗑️</button>
+          <div class="user-actions">
+            <select onchange="updateRole('${id}', this.value)" ${isAdmin ? 'disabled' : ''}>
+              <option value="user" ${u.role === 'user' ? 'selected' : ''}>Utilisateur</option>
+              <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+            </select>
+            <button class="btn-del" onclick="deleteUser('${id}')" ${isAdmin ? 'disabled' : ''}>🗑️</button>
+          </div>
         `;
         list.appendChild(div);
       }
     });
   }
 
-  // Fonctions globales attachées à window pour le HTML dynamique
-  window.updateRole = (uid, newRole) => {
-    update(ref(db, `users/${uid}`), { role: newRole });
-  };
-
-  window.deleteUser = (uid) => {
-    if (confirm("Supprimer cet utilisateur ?")) {
-      remove(ref(db, `users/${uid}`));
-    }
-  };
-
-  // --- ACTIONS ---
+  window.updateRole = (uid, newRole) => { update(ref(db, `users/${uid}`), { role: newRole }); };
+  window.deleteUser = (uid) => { if (confirm("Supprimer cet utilisateur ?")) remove(ref(db, `users/${uid}`)); };
   document.getElementById("btn-logout").onclick = () => signOut(auth);
   document.getElementById("mode-btn-toggle").onclick = async () => {
     const s = await get(ref(db, `users/${auth.currentUser.uid}`));
