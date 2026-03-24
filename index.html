@@ -5,28 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Météo - Dashboard</title>
   <style>
+    /* --- STRUCTURE DE BASE (Fixe & Sans Scroll) --- */
     html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
-    body { display: flex; flex-direction: column; background-color: #fff3e0; transition: 0.3s; padding-top: 60px; box-sizing: border-box; }
-
-    /* Barre de navigation */
-    .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background-color: #ff8800; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-    .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 30px; height: 20px; background: transparent; border: none; }
-    .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
     
-    /* Menu Drawer */
-    .drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #ffe082; overflow-x: hidden; transition: 0.4s; display: flex; flex-direction: column; }
-    .drawer a, .drawer button { padding: 20px; text-decoration: none; font-size: 18px; color: #333; border: none; background: none; text-align: left; cursor: pointer; }
-    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
-
-    /* Conteneur principal Adaptatif */
-    .main-layout { 
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-      padding: 20px; gap: 20px; box-sizing: border-box; width: 100%;
+    body {
+      display: flex; flex-direction: column;
+      background-color: #fff3e0; transition: 0.3s;
+      padding-top: 60px;
+      box-sizing: border-box;
     }
 
-    /* Grille de cartes : 1 colonne mobile / 2 colonnes PC */
+    /* --- TOP BAR --- */
+    .top-bar {
+      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+      background-color: #ff8800; color: white; display: flex;
+      align-items: center; justify-content: space-between; 
+      padding: 0 20px; box-sizing: border-box; z-index: 1000; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .menu-btn { 
+      cursor: pointer; display: flex; flex-direction: column; 
+      justify-content: space-between; width: 28px; height: 18px; 
+      background: transparent; border: none; padding: 0;
+    }
+    .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
+
+    /* --- DRAWER & OVERLAY (Identique au Graph) --- */
+    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
+    
+    .drawer { 
+      height: 100%; width: 0; position: fixed; z-index: 2000; 
+      top: 0; right: 0; background-color: #ffe082; 
+      overflow-x: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+      display: flex; flex-direction: column;
+    }
+    .drawer-content { display: flex; flex-direction: column; padding-top: 60px; width: 250px; }
+    .drawer a, .drawer button { 
+      padding: 15px 25px; text-decoration: none; font-size: 18px; 
+      color: #333; border: none; background: none; text-align: left; 
+      cursor: pointer; font-weight: 500;
+    }
+    .drawer a:hover, .drawer button:hover { background: rgba(255,255,255,0.3); }
+
+    /* --- LAYOUT DU CONTENU --- */
+    .main-layout {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px; gap: 20px; box-sizing: border-box;
+      max-width: 1200px; margin: 0 auto; width: 100%;
+    }
+
     .grid-container {
-      display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; max-width: 900px;
+      display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%;
     }
 
     @media (min-width: 768px) {
@@ -39,18 +69,20 @@
     .label { font-size: 1.1rem; color: #666; font-weight: bold; letter-spacing: 1px; }
 
     #btn-lampe { width: 100%; padding: 20px; border-radius: 15px; border: none; font-size: 1.3rem; font-weight: bold; cursor: pointer; background-color: #ff8800; color: white; transition: 0.3s; }
-    #btn-lampe.on { background-color: #4caf50; box-shadow: 0 0 15px rgba(76, 175, 80, 0.5); }
+    #btn-lampe.on { background-color: #4caf50; box-shadow: 0 0 15px rgba(76, 175, 80, 0.4); }
 
-    /* Thème Nuit */
+    /* --- MODE NUIT --- */
     body.nuit { background-color: #1a1a1a !important; color: white; }
     body.nuit .card { background-color: #2c2c2c; color: white; border: 1px solid #444; }
     body.nuit .drawer { background-color: #222; }
-    /*test*/
     body.nuit .drawer a, body.nuit .drawer button { color: #eee; }
+    body.nuit .label { color: #aaa; }
   </style>
 </head>
 <body>
+
   <div id="overlay"></div>
+
   <div class="top-bar" id="nav-bar" style="display:none;">
     <span style="font-weight:bold; font-size:1.2rem;">🏠 Dashboard</span>
     <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
@@ -61,11 +93,18 @@
       <a href="graph.html">📈 Graphiques</a>
       <a href="admin.html" id="admin-link" style="display:none;">🔑 Administration</a>
       <button id="mode-btn-toggle">🌙 Mode Nuit</button>
-      <button id="btn-logout" style="margin-top:auto; color:red; font-weight:bold;">🚪 Déconnexion</button>
+      <button id="btn-logout" style="color:red; font-weight:bold; margin-top:20px; border-top: 1px solid #444;">🚪 Déconnexion</button>
     </div>
   </div>
 
-  <div id="auth-section" class="main-layout"><div class="card"><h2>Connexion</h2><input type="email" id="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;"><br><input type="password" id="password" placeholder="Mot de passe" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;"><br><button id="btn-login" style="width:100%; padding:12px; background:#ff8800; color:white; border:none; border-radius:8px; font-weight:bold;">Se connecter</button></div></div>
+  <div id="auth-section" class="main-layout">
+    <div class="card" style="width: 100%; max-width: 400px;">
+      <h2>Connexion</h2>
+      <input type="email" id="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing: border-box;">
+      <input type="password" id="password" placeholder="Mot de passe" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing: border-box;">
+      <button id="btn-login" style="width:100%; padding:12px; background:#ff8800; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Entrer</button>
+    </div>
+  </div>
 
   <div id="main-content" class="main-layout" style="display:none;">
     <div class="grid-container">
@@ -93,25 +132,37 @@
   const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
   const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
+  // --- DRAWER LOGIC ---
   const dr = document.getElementById("myDrawer"), ov = document.getElementById("overlay");
   document.getElementById("open-drawer").onclick = () => { dr.style.width = "250px"; ov.style.display = "block"; };
   ov.onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
+  // --- AUTH & THEME ---
   onAuthStateChanged(auth, (u) => {
     if (u) {
       document.getElementById("auth-section").style.display = "none";
       document.getElementById("main-content").style.display = "flex";
       document.getElementById("nav-bar").style.display = "flex";
-      onValue(ref(db, `users/${u.uid}`), (s) => { if(s.exists()){ document.body.className = s.val().theme; document.getElementById("admin-link").style.display = s.val().role === "admin" ? "block" : "none"; } });
-    } else { document.getElementById("auth-section").style.display = "flex"; document.getElementById("main-content").style.display = "none"; }
+      onValue(ref(db, `users/${u.uid}`), (s) => { 
+        if(s.exists()){ 
+          document.body.className = s.val().theme; 
+          document.getElementById("admin-link").style.display = s.val().role === "admin" ? "block" : "none"; 
+        } 
+      });
+    } else { 
+      document.getElementById("auth-section").style.display = "flex"; 
+      document.getElementById("main-content").style.display = "none";
+      document.getElementById("nav-bar").style.display = "none";
+    }
   });
 
+  // --- DATA DASHBOARD ---
   onValue(ref(db, "capteurs"), s => {
     const d = s.val(); if(!d) return;
-    document.getElementById("temp-ext").textContent = d.exterieur?.temperature;
-    document.getElementById("hum-ext").textContent = d.exterieur?.humidite;
-    document.getElementById("temp-int").textContent = d.interieur?.temperature;
-    document.getElementById("hum-int").textContent = d.interieur?.humidite;
+    document.getElementById("temp-ext").textContent = d.exterieur?.temperature || "--";
+    document.getElementById("hum-ext").textContent = d.exterieur?.humidite || "--";
+    document.getElementById("temp-int").textContent = d.interieur?.temperature || "--";
+    document.getElementById("hum-int").textContent = d.interieur?.humidite || "--";
   });
 
   onValue(ref(db, "commande/lampe"), s => {
@@ -120,10 +171,14 @@
     btn.className = s.val() ? "on" : "";
   });
 
+  // --- ACTIONS ---
   document.getElementById("btn-lampe").onclick = async () => { const s = await get(ref(db, "commande/lampe")); set(ref(db, "commande/lampe"), !s.val()); };
   document.getElementById("btn-login").onclick = () => signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("password").value);
   document.getElementById("btn-logout").onclick = () => signOut(auth);
-  document.getElementById("mode-btn-toggle").onclick = async () => { const s = await get(ref(db, `users/${auth.currentUser.uid}`)); update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" }); };
+  document.getElementById("mode-btn-toggle").onclick = async () => {
+    const s = await get(ref(db, `users/${auth.currentUser.uid}`));
+    update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" });
+  };
 </script>
 </body>
 </html>
