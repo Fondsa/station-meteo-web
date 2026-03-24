@@ -5,132 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Météo - Connexion</title>
   <style>
-    /* --- STYLE AUTHENTIFICATION --- */
     html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
     body { display: flex; align-items: center; justify-content: center; background-color: #fff3e0; }
-
-    .auth-card { 
-      background: white; padding: 30px; border-radius: 20px; 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; 
-      text-align: center; 
-    }
+    .auth-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
     h2 { color: #ff8800; margin-bottom: 25px; font-size: 1.8rem; }
-    
-    input { 
-      width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; 
-      border: 1px solid #ddd; box-sizing: border-box; font-size: 1rem; outline: none;
-      transition: 0.3s;
-    }
-    input:focus { border-color: #ff8800; box-shadow: 0 0 5px rgba(255,136,0,0.2); }
-
-    .btn { 
-      width: 100%; padding: 14px; border: none; border-radius: 10px; 
-      font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem;
-      margin-top: 5px;
-    }
+    input { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 1rem; outline: none; transition: 0.3s; }
+    input:focus { border-color: #ff8800; }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem; margin-top: 5px; }
     .btn-login { background: #ff8800; color: white; }
-    .btn-login:hover { background: #e67a00; }
-    
-    .btn-register { 
-      background: white; color: #ff8800; border: 2px solid #ff8800; 
-      margin-top: 15px;
-    }
-    .btn-register:hover { background: #fff3e0; }
-    
-    .error-msg { 
-      color: #d32f2f; background: #fee; padding: 10px; 
-      border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px; 
-      display: none; border: 1px solid #ffcdd2;
-    }
-
-    /* Petit texte d'aide */
+    .btn-register { background: white; color: #ff8800; border: 2px solid #ff8800; margin-top: 15px; }
+    .error-msg { color: #d32f2f; background: #fee; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px; display: none; border: 1px solid #ffcdd2; line-height: 1.4; }
     .hint { color: #888; font-size: 0.8rem; margin-top: 20px; }
   </style>
 </head>
 <body>
-
   <div class="auth-card">
     <h2>☀️ Station Météo</h2>
-    
     <div id="error" class="error-msg"></div>
-
-    <input type="email" id="email" placeholder="Email (ex: test@mail.com)">
+    <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Mot de passe">
-    
     <button id="btn-login" class="btn btn-login">SE CONNECTER</button>
     <button id="btn-register" class="btn btn-register">CRÉER UN COMPTE</button>
-
-    <div class="hint">Les nouveaux comptes sont "Utilisateurs" par défaut.</div>
+    <div class="hint">Accès réservé aux membres inscrits.</div>
   </div>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
   import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  const firebaseConfig = { 
-    apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", 
-    authDomain: "projetfakirradio.firebaseapp.com", 
-    databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", 
-    projectId: "projetfakirradio" 
-  };
-  
+  const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
   const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getDatabase(app);
 
-  const emailInput = document.getElementById("email");
-  const passInput = document.getElementById("password");
   const errorDiv = document.getElementById("error");
 
-  function showError(msg) {
-    errorDiv.innerText = msg;
+  // --- DÉTECTION ERREUR SUPPRESSION ---
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('error') === 'deleted') {
+    errorDiv.innerText = "❌ Accès refusé : Ce compte a été supprimé ou n'existe pas dans notre base de données.";
     errorDiv.style.display = "block";
   }
 
-  // --- LOGIQUE DE CONNEXION ---
+  function showError(msg) { errorDiv.innerText = msg; errorDiv.style.display = "block"; }
+
   document.getElementById("btn-login").onclick = async () => {
     errorDiv.style.display = "none";
     try {
-      await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
-      // Succès : La redirection se fera via le dashboard au chargement
+      await signInWithEmailAndPassword(auth, email.value, password.value);
       window.location.href = "index.html";
-    } catch (e) {
-      showError("Email ou mot de passe incorrect.");
-    }
+    } catch (e) { showError("Email ou mot de passe incorrect."); }
   };
 
-  // --- LOGIQUE DE CRÉATION DE COMPTE (CORRIGÉE) ---
   document.getElementById("btn-register").onclick = async () => {
     errorDiv.style.display = "none";
-    
-    if (!emailInput.value || !passInput.value) {
-      showError("Veuillez remplir tous les champs.");
-      return;
-    }
-
     try {
-      // 1. Créer le compte dans Firebase Authentication
-      const result = await createUserWithEmailAndPassword(auth, emailInput.value, passInput.value);
-      
-      // 2. CRITICAL : Attendre que les infos soient écrites dans la Realtime Database
-      // On crée le profil utilisateur avec le rôle "user" et le thème "jour"
-      await set(ref(db, `users/${result.user.uid}`), { 
-        email: emailInput.value, 
-        role: "user", 
-        theme: "jour" 
-      });
-
-      // 3. Redirection seulement après confirmation de l'écriture
+      const res = await createUserWithEmailAndPassword(auth, email.value, password.value);
+      await set(ref(db, `users/${res.user.uid}`), { email: email.value, role: "user", theme: "jour" });
       window.location.href = "index.html";
-      
-    } catch (e) {
-      if (e.code === 'auth/email-already-in-use') {
-        showError("Cet email est déjà utilisé.");
-      } else if (e.code === 'auth/weak-password') {
-        showError("Le mot de passe doit faire 6 caractères minimum.");
-      } else {
-        showError("Erreur : " + e.message);
-      }
-    }
+    } catch (e) { showError("Erreur : " + e.message); }
   };
 </script>
 </body>
