@@ -6,80 +6,94 @@
   <title>Analyses - Station Météo</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Reset & Full Screen */
-    html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    /* --- STRUCTURE DE BASE (Fixe & Sans Scroll) --- */
+    html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
     
     body {
       display: flex; flex-direction: column;
       background-color: #fff3e0; transition: 0.3s;
-      padding-top: 60px; /* Espace barre du haut */
+      padding-top: 60px; /* Taille de la Top Bar */
       box-sizing: border-box;
     }
 
-    /* TOP BAR */
+    /* --- TOP BAR (Fixe en haut) --- */
     .top-bar {
       position: fixed; top: 0; left: 0; width: 100%; height: 60px;
       background-color: #ff8800; color: white; display: flex;
-      align-items: center; justify-content: space-between; padding: 0 20px;
-      box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      align-items: center; justify-content: space-between; 
+      padding: 0 20px; box-sizing: border-box; z-index: 1000; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
-    .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 25px; height: 18px; background: transparent; border: none; }
+    
+    /* Bouton Menu (Toujours à droite, bien cadré) */
+    .menu-btn { 
+      cursor: pointer; display: flex; flex-direction: column; 
+      justify-content: space-between; width: 28px; height: 18px; 
+      background: transparent; border: none; padding: 0;
+    }
     .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
 
-    /* LAYOUT PRINCIPAL */
+    /* --- DRAWER (Menu Latéral - Taille Fixe) --- */
+    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
+    
+    .drawer { 
+      height: 100%; width: 0; position: fixed; z-index: 2000; 
+      top: 0; right: 0; background-color: #ffe082; 
+      overflow-x: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+      display: flex; flex-direction: column;
+    }
+    .drawer-content { display: flex; flex-direction: column; padding-top: 60px; width: 250px; }
+    .drawer a, .drawer button { 
+      padding: 15px 25px; text-decoration: none; font-size: 18px; 
+      color: #333; border: none; background: none; text-align: left; 
+      cursor: pointer; font-weight: 500;
+    }
+    .drawer a:hover, .drawer button:hover { background: rgba(255,255,255,0.3); }
+
+    /* --- LAYOUT DU CONTENU --- */
     .main-layout {
       flex: 1; display: flex; flex-direction: column;
-      padding: 15px; gap: 15px; box-sizing: border-box;
-      height: calc(100vh - 60px);
+      padding: 10px; gap: 10px; box-sizing: border-box;
+      height: calc(100vh - 60px); width: 100%;
+      max-width: 1400px; margin: 0 auto; /* Centre le contenu sur très grands écrans */
     }
 
-    /* Configuration Panel */
+    /* Panel de contrôles */
     .config-panel {
       background: white; padding: 15px; border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      display: flex; flex-direction: column; gap: 15px; align-items: center;
+      display: flex; flex-direction: column; gap: 10px; align-items: center;
     }
 
-    /* Grille pour les filtres et la fréquence */
-    .config-grid {
-      display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center;
-    }
+    /* Grille Responsive */
+    .config-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; align-items: center; }
 
-    /* CHART CONTAINER */
+    /* Graphique */
     .chart-container {
       flex: 1; background: white; padding: 15px; border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      min-height: 0; /* Permet au flex-item de rétrécir correctement */
-      position: relative;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 0;
     }
 
-    /* FILTRES TEMPORELS */
-    .time-filters { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    /* Filtres & Fréquence */
+    .time-filters { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
     .time-filters button {
-      padding: 8px 16px; border: 2px solid #ff8800; background: white;
-      color: #ff8800; cursor: pointer; border-radius: 20px; font-weight: bold; transition: 0.2s;
+      padding: 6px 14px; border: 2px solid #ff8800; background: white;
+      color: #ff8800; cursor: pointer; border-radius: 20px; font-weight: bold; font-size: 0.85rem;
     }
     .time-filters button.active { background: #ff8800; color: white; }
 
-    /* FREQUENCE ZONE */
-    .freq-zone { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
-    #interval-range { width: 150px; cursor: pointer; accent-color: #ff8800; }
-    .btn-ok { background: #4caf50; color: white; border: none; padding: 6px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .freq-zone { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; font-size: 0.9rem; }
+    #interval-range { width: 140px; accent-color: #ff8800; }
+    .btn-ok { background: #4caf50; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
-    /* --- ADAPTATION PC (Écrans larges) --- */
+    /* --- AJUSTEMENTS PC --- */
     @media (min-width: 1024px) {
-      .main-layout { padding: 25px; gap: 20px; }
-      .config-grid { flex-direction: row; justify-content: space-between; }
-      .config-panel { padding: 10px 30px; }
-      .chart-container { padding: 25px; }
+      .config-grid { flex-direction: row; justify-content: space-between; padding: 0 20px; }
+      .main-layout { padding: 20px; gap: 20px; }
     }
 
-    /* DRAWER */
-    .drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #ffe082; overflow-x: hidden; transition: 0.4s; box-shadow: -5px 0 15px rgba(0,0,0,0.2); }
-    .drawer-content { display: flex; flex-direction: column; padding-top: 60px; }
-    .drawer a, .drawer button { padding: 20px; text-decoration: none; font-size: 18px; color: #333; border: none; background: none; text-align: left; cursor: pointer; }
-
-    /* MODE NUIT */
+    /* --- MODE NUIT --- */
     body.nuit { background-color: #1a1a1a !important; color: white; }
     body.nuit .config-panel, body.nuit .chart-container { background-color: #2c2c2c; color: white; border: 1px solid #444; }
     body.nuit .drawer { background-color: #222; }
@@ -88,8 +102,10 @@
 </head>
 <body>
 
+  <div id="overlay"></div>
+
   <div class="top-bar">
-    <span style="font-weight:bold; font-size:1.2rem;">📈 Analyses de données</span>
+    <span style="font-weight:bold; font-size:1.2rem;">📊 Analyses</span>
     <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
   </div>
 
@@ -97,14 +113,13 @@
     <div class="drawer-content">
       <a href="index.html">🏠 Dashboard</a>
       <button id="mode-btn-toggle">🌙 Mode Nuit</button>
-      <button id="btn-logout" style="color:red; font-weight:bold; margin-top:20px;">🚪 Déconnexion</button>
+      <button id="btn-logout" style="color:red; font-weight:bold; margin-top:20px; border-top: 1px solid #444;">🚪 Déconnexion</button>
     </div>
   </div>
 
   <div class="main-layout">
     <div class="config-panel">
       <div class="config-grid">
-        
         <div class="time-filters" id="filters">
           <button data-ms="3600000">1H</button>
           <button data-ms="86400000">1J</button>
@@ -113,12 +128,11 @@
         </div>
 
         <div class="freq-zone">
-          <span>Fréquence ESP : <b id="current-active-val" style="color:#ff8800;">--</b></span>
+          <span>Fréquence : <b id="current-active-val" style="color:#ff8800;">--</b></span>
           <input type="range" id="interval-range" min="10" max="600" step="10">
-          <span id="interval-preview-val" style="font-weight:bold;">--</span>
-          <button id="btn-validate-interval" class="btn-ok">APPLIQUER</button>
+          <span id="interval-preview-val" style="font-weight:bold; width: 45px; display: inline-block;">--</span>
+          <button id="btn-validate-interval" class="btn-ok">OK</button>
         </div>
-
       </div>
     </div>
 
@@ -135,29 +149,25 @@
   const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
   const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
-  // --- MENU ---
-  const dr = document.getElementById("myDrawer");
-  document.getElementById("open-drawer").onclick = () => dr.style.width = "250px";
-  dr.onclick = () => dr.style.width = "0";
+  // --- DRAWER LOGIC ---
+  const dr = document.getElementById("myDrawer"), ov = document.getElementById("overlay");
+  document.getElementById("open-drawer").onclick = () => { dr.style.width = "250px"; ov.style.display = "block"; };
+  ov.onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
   // --- CHART ---
   const ctx = document.getElementById('mainChart').getContext('2d');
   const mainChart = new Chart(ctx, {
     type: 'line',
     data: { labels: [], datasets: [
-      { label: 'Temp Ext', data: [], borderColor: '#ff8800', backgroundColor: 'rgba(255,136,0,0.1)', fill: true, tension: 0.3, yAxisID: 'y' },
+      { label: 'Temp Ext', data: [], borderColor: '#ff8800', tension: 0.3, yAxisID: 'y' },
       { label: 'Hum Ext', data: [], borderColor: '#3498db', tension: 0.3, yAxisID: 'y1' },
       { label: 'Temp Int', data: [], borderColor: '#e74c3c', tension: 0.3, yAxisID: 'y' },
       { label: 'Hum Int', data: [], borderColor: '#2ecc71', tension: 0.3, yAxisID: 'y1' }
     ]},
-    options: { 
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: window.innerWidth > 768 ? 'top' : 'bottom' } },
-      scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } }
-    }
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } } }
   });
 
-  // --- DATA ---
+  // --- DATA LOGIC ---
   const formatF = (s) => s < 60 ? s+"s" : Math.floor(s/60)+"m"+(s%60||"");
   let unsub = null;
 
@@ -171,12 +181,10 @@
         l.push(d[k].temps); te.push(d[k].tempExt); he.push(d[k].humExt); ti.push(d[k].tempInt); hi.push(d[k].humInt);
       });
       mainChart.data.labels = l; mainChart.data.datasets[0].data = te; mainChart.data.datasets[1].data = he;
-      mainChart.data.datasets[2].data = ti; mainChart.data.datasets[3].data = hi;
-      mainChart.update();
+      mainChart.data.datasets[2].data = ti; mainChart.data.datasets[3].data = hi; mainChart.update();
     });
   }
 
-  // --- ACTIONS ---
   onAuthStateChanged(auth, u => {
     if (!u) window.location.href = "index.html";
     onValue(ref(db, `users/${u.uid}`), (s) => { if(s.exists()) document.body.className = s.val().theme; });
@@ -196,6 +204,10 @@
   range.oninput = () => preview.textContent = formatF(parseInt(range.value));
   document.getElementById('btn-validate-interval').onclick = () => set(ref(db, "config/intervalle_sec"), parseInt(range.value));
   document.getElementById("btn-logout").onclick = () => signOut(auth);
+  document.getElementById("mode-btn-toggle").onclick = async () => {
+    const s = await get(ref(db, `users/${auth.currentUser.uid}`));
+    update(ref(db, `users/${auth.currentUser.uid}`), { theme: s.val().theme === "jour" ? "nuit" : "jour" });
+  };
 </script>
 </body>
 </html>
