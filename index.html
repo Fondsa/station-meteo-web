@@ -19,27 +19,114 @@
   <p id="user-info"></p>
   <button id="btn-logout" style="display:none; background-color: #888;">Déconnexion</button>
   <br>
-  <a href="admin.html" id="admin-link" style="display:none; color: #ff8800; font-weight: bold; text-decoration: none; margin-top: 10px;">Accéder à la Page Admin</a>
+  <a href="admin.html" id="admin-link" style="display:none; color: #ff8800; font-weight: bold;">Accéder à la Page Admin</a>
 </div>
 
 <div class="card">
   <h2>Capteurs</h2>
-  <p>Extérieur : <span id="temp-ext">--</span> °C</p>
-  <p>Humidité Ext. : <span id="hum-ext">--</span> %</p>
-  <p>Intérieur : <span id="temp-int">--</span> °C</p>
-  <p>Humidité Int. : <span id="hum-int">--</span> %</p>
+  <p>Extérieur : <span id="temp-ext">--</span> °C / <span id="hum-ext">--</span> %</p>
+  <p>Intérieur : <span id="temp-int">--</span> °C / <span id="hum-int">--</span> %</p>
 </div>
 
 <div class="card">
-  <h2>Lampe Extérieure</h2>
+  <h2>Commandes</h2>
   <button id="btn-lampe">Chargement...</button>
+  <button id="mode-btn">Mode Nuit</button>
 </div>
 
-<div class="card">
-    <button id="mode-btn">Mode Nuit</button>
-</div>
+<script type="module">
+  // Importations
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-<script type="module" src="App.js"></script>
+  // Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
+    authDomain: "projetfakirradio.firebaseapp.com",
+    databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "projetfakirradio",
+    storageBucket: "projetfakirradio.firebasestorage.app",
+    messagingSenderId: "363899261538",
+    appId: "1:363899261538:web:ad30da02b1485f5c2d373b"
+  };
+
+  // Initialisation
+  console.log("Démarrage Firebase...");
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  // --- AUTHENTIFICATION ---
+  const btnLogin = document.getElementById("btn-login");
+  const btnSignup = document.getElementById("btn-signup");
+
+  btnLogin.onclick = () => {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+    signInWithEmailAndPassword(auth, email, pass)
+      .then(() => console.log("Connecté !"))
+      .catch(err => alert("Erreur connexion: " + err.message));
+  };
+
+  btnSignup.onclick = async () => {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email, pass);
+      await set(ref(db, 'users/' + res.user.uid), { email: email, role: "user" });
+      alert("Compte créé !");
+    } catch (err) { alert("Erreur inscription: " + err.message); }
+  };
+
+  document.getElementById("btn-logout").onclick = () => signOut(auth);
+
+  onAuthStateChanged(auth, async (user) => {
+    const adminLink = document.getElementById("admin-link");
+    const logoutBtn = document.getElementById("btn-logout");
+    if (user) {
+      document.getElementById("user-info").textContent = "Connecté: " + user.email;
+      logoutBtn.style.display = "block";
+      btnLogin.style.display = "none";
+      btnSignup.style.display = "none";
+      
+      const snap = await get(ref(db, `users/${user.uid}`));
+      if (snap.exists() && snap.val().role === "admin") adminLink.style.display = "block";
+    } else {
+      document.getElementById("user-info").textContent = "";
+      logoutBtn.style.display = "none";
+      btnLogin.style.display = "inline-block";
+      btnSignup.style.display = "inline-block";
+      adminLink.style.display = "none";
+    }
+  });
+
+  // --- DONNÉES ---
+  onValue(ref(db, "capteurs/exterieur/temperature"), s => document.getElementById("temp-ext").textContent = s.val());
+  onValue(ref(db, "capteurs/exterieur/humidite"), s => document.getElementById("hum-ext").textContent = s.val());
+  onValue(ref(db, "capteurs/interieur/temperature"), s => document.getElementById("temp-int").textContent = s.val());
+  onValue(ref(db, "capteurs/interieur/humidite"), s => document.getElementById("hum-int").textContent = s.val());
+
+  const btnLampe = document.getElementById("btn-lampe");
+  onValue(ref(db, "commande/lampe"), s => {
+    btnLampe.textContent = s.val() ? "Éteindre Lampe" : "Allumer Lampe";
+  });
+  btnLampe.onclick = async () => {
+    const s = await get(ref(db, "commande/lampe"));
+    set(ref(db, "commande/lampe"), !s.val());
+  };
+
+  const modeBtn = document.getElementById("mode-btn");
+  onValue(ref(db, "ui/mode"), s => {
+    const m = s.val() || "jour";
+    document.body.className = m;
+    modeBtn.textContent = m === "jour" ? "Mode Nuit" : "Mode Jour";
+  });
+  modeBtn.onclick = async () => {
+    const s = await get(ref(db, "ui/mode"));
+    set(ref(db, "ui/mode"), s.val() === "jour" ? "nuit" : "jour");
+  };
+</script>
 
 </body>
 </html>
