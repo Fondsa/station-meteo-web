@@ -5,122 +5,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Météo - Dashboard</title>
   <style>
-    /* --- STRUCTURE DE BASE (Fixe & Sans Scroll) --- */
     html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
-    
-    body {
-      display: flex; flex-direction: column;
-      background-color: #fff3e0; transition: 0.3s;
-      padding-top: 60px;
-      box-sizing: border-box;
-    }
+    body { display: flex; flex-direction: column; background-color: #fff3e0; transition: 0.3s; padding-top: 60px; box-sizing: border-box; }
 
     /* --- TOP BAR --- */
-    .top-bar {
-      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-      background-color: #ff8800; color: white; display: flex;
-      align-items: center; justify-content: space-between; 
-      padding: 0 20px; box-sizing: border-box; z-index: 1000; 
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-    .menu-btn { 
-      cursor: pointer; display: flex; flex-direction: column; 
-      justify-content: space-between; width: 28px; height: 18px; 
-      background: transparent; border: none; padding: 0;
-    }
+    .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background-color: #ff8800; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 28px; height: 18px; background: transparent; border: none; padding: 0; }
     .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
 
-    /* --- DRAWER & OVERLAY (Identique au Graph) --- */
+    /* --- DRAWER (Menu en Cartes) --- */
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
+    .drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #f8f9fa; overflow-x: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -5px 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
     
-    .drawer { 
-      height: 100%; width: 0; position: fixed; z-index: 2000; 
-      top: 0; right: 0; background-color: #ffe082; 
-      overflow-x: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-      box-shadow: -5px 0 15px rgba(0,0,0,0.3);
-      display: flex; flex-direction: column;
-    }
-    .drawer-content { display: flex; flex-direction: column; padding-top: 60px; width: 250px; }
-    .drawer a, .drawer button { 
-      padding: 15px 25px; text-decoration: none; font-size: 18px; 
-      color: #333; border: none; background: none; text-align: left; 
-      cursor: pointer; font-weight: 500;
-    }
-    .drawer a:hover, .drawer button:hover { background: rgba(255,255,255,0.3); }
+    .drawer-content { flex: 1; display: flex; flex-direction: column; padding: 80px 15px 20px 15px; gap: 12px; width: 280px; box-sizing: border-box; }
+    
+    /* Style des items du menu en cartes */
+    .menu-card { background: white; padding: 15px; border-radius: 12px; text-decoration: none; color: #333; font-weight: bold; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border: 1px solid transparent; }
+    .menu-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-color: #ff8800; }
+    
+    /* Bouton déconnexion tout en bas */
+    .logout-container { padding: 20px 15px; border-top: 1px solid #eee; }
+    .btn-logout { width: 100%; background: #fee; color: #d32f2f; border: 1px solid #ffcdd2; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-    /* --- LAYOUT DU CONTENU --- */
-    .main-layout {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 20px; gap: 20px; box-sizing: border-box;
-      max-width: 1200px; margin: 0 auto; width: 100%;
-    }
-
-    .grid-container {
-      display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%;
-    }
-
-    @media (min-width: 768px) {
-      .grid-container { grid-template-columns: 1fr 1fr; }
-      .card-full { grid-column: span 2; }
-    }
+    /* --- LAYOUT CONTENU --- */
+    .main-layout { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; gap: 20px; box-sizing: border-box; max-width: 1200px; margin: 0 auto; width: 100%; }
+    .grid-container { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
+    @media (min-width: 768px) { .grid-container { grid-template-columns: 1fr 1fr; } .card-full { grid-column: span 2; } }
 
     .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); text-align: center; }
     .valeur { font-size: 3rem; font-weight: bold; color: #ff8800; margin: 10px 0; }
-    .label { font-size: 1.1rem; color: #666; font-weight: bold; letter-spacing: 1px; }
-
+    .label { font-size: 1.1rem; color: #666; font-weight: bold; }
     #btn-lampe { width: 100%; padding: 20px; border-radius: 15px; border: none; font-size: 1.3rem; font-weight: bold; cursor: pointer; background-color: #ff8800; color: white; transition: 0.3s; }
-    #btn-lampe.on { background-color: #4caf50; box-shadow: 0 0 15px rgba(76, 175, 80, 0.4); }
+    #btn-lampe.on { background-color: #4caf50; }
 
-    /* --- MODE NUIT --- */
-    body.nuit { background-color: #1a1a1a !important; color: white; }
-    body.nuit .card { background-color: #2c2c2c; color: white; border: 1px solid #444; }
-    body.nuit .drawer { background-color: #222; }
-    body.nuit .drawer a, body.nuit .drawer button { color: #eee; }
-    body.nuit .label { color: #aaa; }
+    /* Mode Nuit Drawer */
+    body.nuit .drawer { background-color: #1a1a1a; }
+    body.nuit .menu-card { background-color: #2c2c2c; color: white; box-shadow: none; }
+    body.nuit .card { background-color: #2c2c2c; color: white; }
+    body.nuit .logout-container { border-color: #333; }
   </style>
 </head>
 <body>
 
   <div id="overlay"></div>
-
   <div class="top-bar" id="nav-bar" style="display:none;">
-    <span style="font-weight:bold; font-size:1.2rem;">🏠 Dashboard</span>
+    <span style="font-weight:bold;">🏠 Dashboard</span>
     <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
   </div>
 
   <div id="myDrawer" class="drawer">
     <div class="drawer-content">
-      <a href="graph.html">📈 Graphiques</a>
-      <a href="admin.html" id="admin-link" style="display:none;">🔑 Administration</a>
-      <button id="mode-btn-toggle">🌙 Mode Nuit</button>
-      <button id="btn-logout" style="color:red; font-weight:bold; margin-top:20px; border-top: 1px solid #444;">🚪 Déconnexion</button>
+      <a href="graph.html" class="menu-card"><span>📈</span> Graphiques</a>
+      <a href="admin.html" id="admin-link" class="menu-card" style="display:none;"><span>🔑</span> Administration</a>
+      <button id="mode-btn-toggle" class="menu-card" style="width:100%; border:none; cursor:pointer; font-family:inherit;"><span>🌙</span> Mode Nuit</button>
+    </div>
+    <div class="logout-container">
+      <button id="btn-logout" class="btn-logout">🚪 Déconnexion</button>
     </div>
   </div>
 
   <div id="auth-section" class="main-layout">
-    <div class="card" style="width: 100%; max-width: 400px;">
+    <div class="card" style="max-width:400px; width:100%;">
       <h2>Connexion</h2>
-      <input type="email" id="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing: border-box;">
-      <input type="password" id="password" placeholder="Mot de passe" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing: border-box;">
+      <input type="email" id="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;">
+      <input type="password" id="password" placeholder="Mot de passe" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;">
       <button id="btn-login" style="width:100%; padding:12px; background:#ff8800; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Entrer</button>
     </div>
   </div>
 
   <div id="main-content" class="main-layout" style="display:none;">
     <div class="grid-container">
-      <div class="card">
-        <div class="label">🌡️ EXTÉRIEUR</div>
-        <div class="valeur"><span id="temp-ext">--</span>°C</div>
-        <div class="label">💧 <span id="hum-ext">--</span>% Humidité</div>
-      </div>
-      <div class="card">
-        <div class="label">🏠 INTÉRIEUR</div>
-        <div class="valeur"><span id="temp-int">--</span>°C</div>
-        <div class="label">💧 <span id="hum-int">--</span>% Humidité</div>
-      </div>
-      <div class="card card-full">
-        <button id="btn-lampe">CHARGEMENT...</button>
-      </div>
+      <div class="card"><div class="label">🌡️ EXTÉRIEUR</div><div class="valeur"><span id="temp-ext">--</span>°C</div><div class="label">💧 <span id="hum-ext">--</span>% Hum</div></div>
+      <div class="card"><div class="label">🏠 INTÉRIEUR</div><div class="valeur"><span id="temp-int">--</span>°C</div><div class="label">💧 <span id="hum-int">--</span>% Hum</div></div>
+      <div class="card card-full"><button id="btn-lampe">CHARGEMENT...</button></div>
     </div>
   </div>
 
@@ -132,12 +89,10 @@
   const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
   const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
-  // --- DRAWER LOGIC ---
   const dr = document.getElementById("myDrawer"), ov = document.getElementById("overlay");
-  document.getElementById("open-drawer").onclick = () => { dr.style.width = "250px"; ov.style.display = "block"; };
+  document.getElementById("open-drawer").onclick = () => { dr.style.width = "280px"; ov.style.display = "block"; };
   ov.onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
-  // --- AUTH & THEME ---
   onAuthStateChanged(auth, (u) => {
     if (u) {
       document.getElementById("auth-section").style.display = "none";
@@ -146,17 +101,12 @@
       onValue(ref(db, `users/${u.uid}`), (s) => { 
         if(s.exists()){ 
           document.body.className = s.val().theme; 
-          document.getElementById("admin-link").style.display = s.val().role === "admin" ? "block" : "none"; 
+          document.getElementById("admin-link").style.display = s.val().role === "admin" ? "flex" : "none"; 
         } 
       });
-    } else { 
-      document.getElementById("auth-section").style.display = "flex"; 
-      document.getElementById("main-content").style.display = "none";
-      document.getElementById("nav-bar").style.display = "none";
-    }
+    } else { document.getElementById("auth-section").style.display = "flex"; document.getElementById("main-content").style.display = "none"; document.getElementById("nav-bar").style.display = "none"; }
   });
 
-  // --- DATA DASHBOARD ---
   onValue(ref(db, "capteurs"), s => {
     const d = s.val(); if(!d) return;
     document.getElementById("temp-ext").textContent = d.exterieur?.temperature || "--";
@@ -171,7 +121,6 @@
     btn.className = s.val() ? "on" : "";
   });
 
-  // --- ACTIONS ---
   document.getElementById("btn-lampe").onclick = async () => { const s = await get(ref(db, "commande/lampe")); set(ref(db, "commande/lampe"), !s.val()); };
   document.getElementById("btn-login").onclick = () => signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("password").value);
   document.getElementById("btn-logout").onclick = () => signOut(auth);
