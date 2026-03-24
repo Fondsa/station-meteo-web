@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Console Admin - Station Météo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Console Administration</h1>
+
+<div class="card">
+  <h2>Gestion des Utilisateurs</h2>
+  <div id="user-list">Chargement des comptes...</div>
+</div>
+
+<div class="card">
+  <button onclick="window.location.href='index.html'">Retour à l'accueil</button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getDatabase, ref, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA",
+    authDomain: "projetfakirradio.firebaseapp.com",
+    databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "projetfakirradio",
+    storageBucket: "projetfakirradio.firebasestorage.app",
+    messagingSenderId: "363899261538",
+    appId: "1:363899261538:web:ad30da02b1485f5c2d373b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  // Vérification si l'utilisateur est bien admin
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "index.html"; // Redirige si pas connecté
+      return;
+    }
+
+    const userRef = ref(db, `users/${user.uid}`);
+    const snap = await get(userRef);
+    if (!snap.exists() || snap.val().role !== "admin") {
+      alert("Accès refusé : vous n'êtes pas admin.");
+      window.location.href = "index.html";
+    }
+  });
+
+  // Affichage de la liste
+  const usersRef = ref(db, "users");
+  onValue(usersRef, (snapshot) => {
+    const users = snapshot.val();
+    const listContainer = document.getElementById("user-list");
+    listContainer.innerHTML = ""; 
+
+    for (let uid in users) {
+      const user = users[uid];
+      const userRow = document.createElement("div");
+      userRow.style.borderBottom = "1px solid #ff8800";
+      userRow.style.padding = "10px";
+      
+      userRow.innerHTML = `
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Rôle:</strong> ${user.role}</p>
+        ${user.role !== 'admin' ? `<button onclick="deleteUser('${uid}')" style="background-color:red">Supprimer</button>` : '<em>(Admin principal)</em>'}
+      `;
+      listContainer.appendChild(userRow);
+    }
+  });
+
+  // Fonction de suppression
+  window.deleteUser = (uid) => {
+    if(confirm("Voulez-vous vraiment supprimer cet utilisateur de la base ?")) {
+      remove(ref(db, `users/${uid}`));
+    }
+  };
+</script>
+
+</body>
+</html>
