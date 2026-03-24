@@ -7,63 +7,117 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { padding-top: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; transition: 0.3s; background-color: #fff3e0; }
-    .config-panel { background: white; padding: 15px; border-radius: 12px; width: 90%; max-width: 800px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .chart-container { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 900px; height: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+    body { padding-top: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; transition: 0.3s; background-color: #fff3e0; font-family: sans-serif; }
+    
+    /* Panel de configuration centré */
+    .config-panel { 
+      background: white; padding: 20px; border-radius: 12px; 
+      width: 90%; max-width: 600px; margin-bottom: 20px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+    }
+
+    .config-panel label { margin-bottom: 10px; font-weight: bold; }
+    
+    #interval-range { width: 100%; max-width: 400px; margin: 15px 0; cursor: pointer; }
+
+    #btn-validate-interval { 
+      width: 100%; max-width: 300px; background-color: #4caf50; color:white; 
+      border:none; padding:12px; border-radius:8px; cursor:pointer; 
+      font-weight:bold; font-size: 1rem; transition: 0.2s;
+    }
+    #btn-validate-interval:hover { background-color: #43a047; transform: scale(1.02); }
+
+    .chart-container { 
+      background: white; padding: 20px; border-radius: 15px; 
+      width: 95%; max-width: 900px; height: 450px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;
+    }
+
     body.nuit { background-color: #1a1a1a !important; color: white; }
     body.nuit .config-panel, body.nuit .chart-container { background-color: #333; color: white; border: 1px solid #444; }
+    
+    .back-btn { background-color: #ff8800; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; }
   </style>
 </head>
 <body>
+
   <h1>Analyse Historique</h1>
+
   <div class="config-panel">
-    <div style="margin-bottom: 10px;">Fréquence ESP32 active : <span id="current-active-val" style="font-weight:bold; color:#ff8800;">--</span></div>
-    <label>Régler : <span id="interval-preview-val">--</span></label>
-    <input type="range" id="interval-range" min="10" max="600" step="10" value="300" style="width: 100%; margin: 10px 0;">
-    <button id="btn-validate-interval" style="width: 100%; background-color: #4caf50; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Appliquer à l'ESP32</button>
-    <div class="checkbox-group">
-      <label><input type="checkbox" id="check-temp-ext" checked> Temp Ext</label>
-      <label><input type="checkbox" id="check-hum-ext" checked> Hum Ext</label>
-      <label><input type="checkbox" id="check-temp-int" checked> Temp Int</label>
-      <label><input type="checkbox" id="check-hum-int" checked> Hum Int</label>
+    <div style="margin-bottom: 15px; font-size: 0.95rem;">
+      Fréquence ESP32 active : <span id="current-active-val" style="color:#ff8800; font-weight:bold;">--</span>
     </div>
+    
+    <label for="interval-range">Régler la fréquence : <span id="interval-preview-val" style="color:#ff8800;">--</span></label>
+    <input type="range" id="interval-range" min="10" max="600" step="10" value="300">
+    
+    <button id="btn-validate-interval">Appliquer à l'ESP32</button>
   </div>
-  <div class="chart-container"><canvas id="mainChart"></canvas></div>
-  <div class="card"><button onclick="window.location.href='index.html'">Retour au Dashboard</button></div>
+
+  <div class="chart-container">
+    <canvas id="mainChart"></canvas>
+  </div>
+
+  <a href="index.html" class="back-btn">Retour au Dashboard</a>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getDatabase, ref, onValue, set, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio", storageBucket: "projetfakirradio.firebasestorage.app", messagingSenderId: "363899261538", appId: "1:363899261538:web:ad30da02b1485f5c2d373b" };
+  const firebaseConfig = { 
+    apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", 
+    authDomain: "projetfakirradio.firebaseapp.com", 
+    databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", 
+    projectId: "projetfakirradio", 
+    storageBucket: "projetfakirradio.firebasestorage.app", 
+    messagingSenderId: "363899261538", 
+    appId: "1:363899261538:web:ad30da02b1485f5c2d373b" 
+  };
+  
   const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
+  // --- CONFIGURATION DU GRAPHIQUE ---
   const ctx = document.getElementById('mainChart').getContext('2d');
   const mainChart = new Chart(ctx, {
     type: 'line',
     data: { labels: [], datasets: [
-      { label: 'Temp Ext', data: [], borderColor: '#ff8800', tension: 0.3 },
-      { label: 'Hum Ext', data: [], borderColor: '#3498db', yAxisID: 'y1', tension: 0.3 },
-      { label: 'Temp Int', data: [], borderColor: '#e74c3c', tension: 0.3 },
-      { label: 'Hum Int', data: [], borderColor: '#2ecc71', yAxisID: 'y1', tension: 0.3 }
+      { label: 'Temp Ext (°C)', data: [], borderColor: '#ff8800', backgroundColor: 'rgba(255, 136, 0, 0.1)', tension: 0.3, yAxisID: 'y' },
+      { label: 'Hum Ext (%)', data: [], borderColor: '#3498db', backgroundColor: 'rgba(52, 152, 219, 0.1)', tension: 0.3, yAxisID: 'y1' },
+      { label: 'Temp Int (°C)', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', tension: 0.3, yAxisID: 'y' },
+      { label: 'Hum Int (%)', data: [], borderColor: '#2ecc71', backgroundColor: 'rgba(46, 204, 113, 0.1)', tension: 0.3, yAxisID: 'y1' }
     ]},
     options: { 
-      responsive: true, maintainAspectRatio: false, 
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
       scales: { 
-        y: { position: 'left', title: {display:true, text:'Temp (°C)'}},
-        y1: { position: 'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Hum (%)'}}
+        y: { type: 'linear', position: 'left', title: { display: true, text: 'Température (°C)' } },
+        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Humidité (%)' } }
       }
     }
   });
 
+  // --- GESTION DU THÈME & AUTH ---
   onAuthStateChanged(auth, (u) => {
     if (!u) window.location.href = "index.html";
-    onValue(ref(db, `users/${u.uid}`), (s) => { if(s.exists()) document.body.className = s.val().theme; });
+    onValue(ref(db, `users/${u.uid}`), (s) => { 
+      if(s.exists()) {
+        const theme = s.val().theme;
+        document.body.className = theme;
+        const isNuit = theme === "nuit";
+        mainChart.options.scales.x.ticks.color = isNuit ? "#bbb" : "#666";
+        mainChart.options.scales.y.ticks.color = isNuit ? "#bbb" : "#666";
+        mainChart.update();
+      }
+    });
   });
 
-  const range = document.getElementById('interval-range'), preview = document.getElementById('interval-preview-val'), activeDisp = document.getElementById('current-active-val');
+  // --- LOGIQUE FRÉQUENCE ---
+  const range = document.getElementById('interval-range'), 
+        preview = document.getElementById('interval-preview-val'), 
+        activeDisp = document.getElementById('current-active-val');
+  
   const formatS = (s) => s < 60 ? s + " sec" : Math.floor(s/60) + " min " + (s%60 || "");
 
   onValue(ref(db, "config/intervalle_sec"), (s) => {
@@ -76,20 +130,27 @@
   range.oninput = () => preview.textContent = formatS(parseInt(range.value));
   document.getElementById('btn-validate-interval').onclick = () => set(ref(db, "config/intervalle_sec"), parseInt(range.value));
 
-  // RÉCUPÉRATION DES DONNÉES ENVOYÉES PAR L'ESP32
+  // --- RÉCUPÉRATION DES DONNÉES (Formatées par l'ESP32) ---
   onValue(query(ref(db, "historique"), limitToLast(50)), (snap) => {
     const d = snap.val(); if (!d) return;
     const labels = [], tE = [], hE = [], tI = [], hI = [];
+    
+    // On trie par clé (timestamp de Firebase) pour garder l'ordre chronologique
     Object.keys(d).sort().forEach(key => { 
         const p = d[key];
-        labels.push(p.temps); tE.push(p.tempExt); hE.push(p.humExt); tI.push(p.tempInt); hI.push(p.humInt); 
+        // Ici p.temps doit être au format "JJ/MM/AAAA - HH:MM" envoyé par l'ESP
+        labels.push(p.temps); 
+        tE.push(p.tempExt); hE.push(p.humExt); 
+        tI.push(p.tempInt); hI.push(p.humInt); 
     });
-    mainChart.data.labels = labels; mainChart.data.datasets[0].data = tE; mainChart.data.datasets[1].data = hE; mainChart.data.datasets[2].data = tI; mainChart.data.datasets[3].data = hI;
+
+    mainChart.data.labels = labels; 
+    mainChart.data.datasets[0].data = tE; 
+    mainChart.data.datasets[1].data = hE; 
+    mainChart.data.datasets[2].data = tI; 
+    mainChart.data.datasets[3].data = hI;
     mainChart.update();
   });
-  
-  const setupToggle = (id, idx) => document.getElementById(id).onchange = (e) => { mainChart.setDatasetVisibility(idx, e.target.checked); mainChart.update(); };
-  ['check-temp-ext','check-hum-ext','check-temp-int','check-hum-int'].forEach((id, i) => setupToggle(id, i));
 </script>
 </body>
 </html>
