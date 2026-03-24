@@ -3,29 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Graphiques Dynamiques - Station Météo</title>
+  <title>Graphiques - Station Météo</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { padding-top: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-    .config-panel { background: white; padding: 15px; border-radius: 12px; width: 90%; max-width: 800px; margin-bottom: 15px; display: flex; flex-wrap: wrap; justify-content: space-around; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .config-panel { background: white; padding: 15px; border-radius: 12px; width: 90%; max-width: 800px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .chart-container { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 850px; height: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .controls { display: flex; flex-direction: column; gap: 5px; font-weight: bold; }
-    .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
-    
+    .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
     body.nuit { background-color: #1a1a1a !important; color: white; }
     body.nuit .config-panel, body.nuit .chart-container { background-color: #333; color: white; }
   </style>
 </head>
 <body>
-
   <h1>Analyse des Données</h1>
 
   <div class="config-panel">
-    <div class="controls">
-      <label for="interval-range">Fréquence de relevé : <span id="interval-val">5</span> min</label>
-      <input type="range" id="interval-range" min="1" max="60" step="1" value="5">
+    <div style="margin-bottom: 10px; font-size: 0.9rem;">
+      Fréquence active : <span id="current-active-val" style="font-weight:bold; color:#ff8800;">--</span>
     </div>
+    <label>Régler fréquence : <span id="interval-preview-val" style="font-weight:bold;">5 min</span></label>
+    <input type="range" id="interval-range" min="10" max="600" step="10" value="300" style="width: 100%; margin: 10px 0;">
+    <button id="btn-validate-interval" style="width: 100%; background-color: #4caf50;">Appliquer la fréquence</button>
     
     <div class="checkbox-group">
       <label><input type="checkbox" id="check-temp-ext" checked> Temp. Ext</label>
@@ -35,17 +34,12 @@
     </div>
   </div>
 
-  <div class="chart-container">
-    <canvas id="mainChart"></canvas>
-  </div>
-
-  <div class="card">
-    <button onclick="window.location.href='index.html'">Retour au Dashboard</button>
-  </div>
+  <div class="chart-container"><canvas id="mainChart"></canvas></div>
+  <div class="card"><button onclick="window.location.href='index.html'">Retour au Dashboard</button></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getDatabase, ref, onValue, get, set, push, limitToLast, query } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { getDatabase, ref, onValue, set, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -62,92 +56,46 @@
   const db = getDatabase(app);
   const auth = getAuth(app);
 
-  // --- INITIALISATION DU GRAPHIQUE ---
+  const formatAff = (s) => s < 60 ? s + " sec" : Math.floor(s/60) + " min " + (s%60 || "");
+  const range = document.getElementById('interval-range'), preview = document.getElementById('interval-preview-val'), activeDisp = document.getElementById('current-active-val');
+
+  onValue(ref(db, "config/intervalle_sec"), (s) => {
+    const v = s.val() || 300;
+    activeDisp.textContent = formatAff(v);
+  });
+  range.oninput = () => preview.textContent = formatAff(parseInt(range.value));
+  document.getElementById('btn-validate-interval').onclick = () => set(ref(db, "config/intervalle_sec"), parseInt(range.value));
+
   const ctx = document.getElementById('mainChart').getContext('2d');
   const mainChart = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: [], // Les heures arriveront ici
-      datasets: [
-        { label: 'Temp Ext (°C)', data: [], borderColor: '#ff8800', backgroundColor: '#ff8800', yAxisID: 'y' },
-        { label: 'Hum Ext (%)', data: [], borderColor: '#3498db', backgroundColor: '#3498db', yAxisID: 'y1', hidden: false },
-        { label: 'Temp Int (°C)', data: [], borderColor: '#e74c3c', backgroundColor: '#e74c3c', yAxisID: 'y' },
-        { label: 'Hum Int (%)', data: [], borderColor: '#2ecc71', backgroundColor: '#2ecc71', yAxisID: 'y1' }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Température (°C)' } },
-        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Humidité (%)' } }
-      }
-    }
+    data: { labels: [], datasets: [
+      { label: 'Temp Ext', data: [], borderColor: '#ff8800', yAxisID: 'y' },
+      { label: 'Hum Ext', data: [], borderColor: '#3498db', yAxisID: 'y1' },
+      { label: 'Temp Int', data: [], borderColor: '#e74c3c', yAxisID: 'y' },
+      { label: 'Hum Int', data: [], borderColor: '#2ecc71', yAxisID: 'y1' }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, scales: { 
+      y: { type: 'linear', position: 'left', title:{display:true, text:'Temp (°C)'}},
+      y1: { type: 'linear', position: 'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Hum (%)'}}
+    }}
   });
 
-  // --- GESTION DU THÈME ET AUTH ---
+  const setupToggle = (id, idx) => document.getElementById(id).onchange = (e) => { mainChart.setDatasetVisibility(idx, e.target.checked); mainChart.update(); };
+  ['check-temp-ext','check-hum-ext','check-temp-int','check-hum-int'].forEach((id, i) => setupToggle(id, i));
+
   onAuthStateChanged(auth, (user) => {
-    if (!user) { window.location.href = "index.html"; return; }
-    onValue(ref(db, `users/${user.uid}`), (snap) => {
-      if (snap.exists()) document.body.className = snap.val().theme || "jour";
-    });
+    if (!user) window.location.href = "index.html";
+    onValue(ref(db, `users/${user.uid}`), (snap) => { if(snap.exists()) document.body.className = snap.val().theme; });
   });
 
-  // --- LOGIQUE DE L'INTERVALLE ---
-  const rangeInput = document.getElementById('interval-range');
-  const rangeVal = document.getElementById('interval-val');
-  
-  // Charger l'intervalle depuis la DB
-  onValue(ref(db, "config/intervalle"), (s) => {
-    const val = s.val() || 5;
-    rangeInput.value = val;
-    rangeVal.textContent = val;
-  });
-
-  rangeInput.oninput = () => {
-    const val = rangeInput.value;
-    rangeVal.textContent = val;
-    set(ref(db, "config/intervalle"), parseInt(val));
-  };
-
-  // --- GESTION DES CASES À COCHER (Affichage/Masquage) ---
-  const setupToggle = (id, datasetIndex) => {
-    document.getElementById(id).onchange = (e) => {
-      mainChart.setDatasetVisibility(datasetIndex, e.target.checked);
-      mainChart.update();
-    };
-  };
-  setupToggle('check-temp-ext', 0);
-  setupToggle('check-hum-ext', 1);
-  setupToggle('check-temp-int', 2);
-  setupToggle('check-hum-int', 3);
-
-  // --- RÉCUPÉRATION DES DONNÉES HISTORIQUES ---
-  // On récupère les 50 derniers points de l'historique
-  const historiqueRef = query(ref(db, "historique"), limitToLast(50));
-  onValue(historiqueRef, (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
-
-    const labels = [];
-    const tExt = [], hExt = [], tInt = [], hInt = [];
-
-    Object.values(data).forEach(point => {
-      labels.push(point.temps);
-      tExt.push(point.tempExt);
-      hExt.push(point.humExt);
-      tInt.push(point.tempInt);
-      hInt.push(point.humInt);
-    });
-
-    mainChart.data.labels = labels;
-    mainChart.data.datasets[0].data = tExt;
-    mainChart.data.datasets[1].data = hExt;
-    mainChart.data.datasets[2].data = tInt;
-    mainChart.data.datasets[3].data = hInt;
+  onValue(query(ref(db, "historique"), limitToLast(50)), (snap) => {
+    const d = snap.val(); if (!d) return;
+    const labels = [], tE = [], hE = [], tI = [], hI = [];
+    Object.values(d).forEach(p => { labels.push(p.temps); tE.push(p.tempExt); hE.push(p.humExt); tI.push(p.tempInt); hI.push(p.humInt); });
+    mainChart.data.labels = labels; mainChart.data.datasets[0].data = tE; mainChart.data.datasets[1].data = hE; mainChart.data.datasets[2].data = tI; mainChart.data.datasets[3].data = hI;
     mainChart.update();
   });
-
 </script>
 </body>
 </html>
