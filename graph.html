@@ -6,18 +6,21 @@
   <title>Analyses - Station Météo</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    /* --- STRUCTURE DE BASE --- */
     html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
     body { display: flex; flex-direction: column; background-color: #fff3e0; transition: 0.3s; padding-top: 60px; box-sizing: border-box; }
 
+    /* --- TOP BAR --- */
     .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background-color: #ff8800; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
     .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 28px; height: 18px; background: transparent; border: none; padding: 0; }
     .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
 
-    /* --- DRAWER --- */
+    /* --- DRAWER (Menu en Cartes) --- */
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
     .drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #f8f9fa; overflow-x: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -5px 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
     .drawer-content { flex: 1; display: flex; flex-direction: column; padding: 80px 15px 20px 15px; gap: 12px; width: 280px; box-sizing: border-box; }
-    .menu-card { background: white; padding: 15px; border-radius: 12px; text-decoration: none; color: #333; font-weight: bold; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid transparent; }
+    
+    .menu-card { background: white; padding: 15px; border-radius: 12px; text-decoration: none; color: #333; font-weight: bold; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border: 1px solid transparent; }
     .menu-card:hover { border-color: #ff8800; }
     
     .logout-container { padding: 20px 15px; border-top: 1px solid #eee; }
@@ -34,24 +37,26 @@
 
     @media (min-width: 1024px) { .config-panel { flex-direction: row; justify-content: space-between; padding: 10px 30px; } }
 
+    /* --- MODE NUIT --- */
     body.nuit { background-color: #1a1a1a !important; color: white; }
     body.nuit .config-panel, body.nuit .chart-container { background-color: #2c2c2c; color: white; border: 1px solid #444; }
-    body.nuit .drawer { background-color: #1a1a1a; }
-    body.nuit .menu-card { background-color: #2c2c2c; color: white; }
-    body.nuit .logout-container { border-color: #333; }
+    body.nuit .drawer { background-color: #222; }
+    body.nuit .menu-card { background-color: #333; color: white; box-shadow: none; border-color: #444; }
+    body.nuit .logout-container { border-color: #444; }
   </style>
 </head>
 <body>
 
   <div id="overlay"></div>
   <div class="top-bar">
-    <span style="font-weight:bold;">📊 Analyses</span>
+    <span style="font-weight:bold; font-size:1.2rem;">📊 Analyses</span>
     <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
   </div>
 
   <div id="myDrawer" class="drawer">
     <div class="drawer-content">
       <a href="index.html" class="menu-card"><span>🏠</span> Dashboard</a>
+      <a href="admin.html" id="admin-link" class="menu-card" style="display:none;"><span>🔑</span> Administration</a>
       <button id="mode-btn-toggle" class="menu-card" style="width:100%; border:none; cursor:pointer; font-family:inherit;"><span>🌙</span> Mode Nuit</button>
     </div>
     <div class="logout-container">
@@ -103,6 +108,7 @@
 
   const formatF = (s) => s < 60 ? s+"s" : Math.floor(s/60)+"m"+(s%60||"");
   let unsub = null;
+
   function load(ms) {
     if (unsub) unsub();
     let q = ms === 0 ? query(ref(db, "historique"), orderByChild("timestamp")) : query(ref(db, "historique"), orderByChild("timestamp"), startAt(Date.now() - ms));
@@ -118,9 +124,18 @@
   }
 
   onAuthStateChanged(auth, u => {
-    if (!u) window.location.href = "index.html";
-    onValue(ref(db, `users/${u.uid}`), (s) => { if(s.exists()) document.body.className = s.val().theme; });
-    load(0);
+    if (!u) {
+        window.location.href = "index.html";
+    } else {
+        // Vérification du rôle admin pour afficher la carte Administration
+        onValue(ref(db, `users/${u.uid}`), (s) => { 
+          if(s.exists()){ 
+            document.body.className = s.val().theme; 
+            document.getElementById("admin-link").style.display = s.val().role === "admin" ? "flex" : "none"; 
+          } 
+        });
+        load(0);
+    }
   });
 
   document.getElementById('filters').onclick = (e) => { if (e.target.tagName === 'BUTTON') { load(parseInt(e.target.dataset.ms)); }};
