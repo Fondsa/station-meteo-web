@@ -2,10 +2,9 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Administration - Station Météo</title>
+  <title>Administration - Sécurisée</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* --- Styles de base et Fix du fond --- */
     html, body { margin: 0; padding: 0; min-height: 100vh; width: 100%; }
     body { 
       padding-top: 20px; 
@@ -15,10 +14,7 @@
       background-color: #fff3e0; 
       transition: background-color 0.3s, color 0.3s;
     }
-
     h1 { color: #ff8800; }
-
-    /* --- Cartes Utilisateurs --- */
     .user-card { 
       background: white; 
       padding: 15px; 
@@ -30,48 +26,12 @@
       border-left: 5px solid #ff8800; 
       transition: background-color 0.3s, color 0.3s;
     }
-
-    .user-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-      flex-wrap: wrap;
-    }
-
-    .btn-del { 
-      background: #ff4444; 
-      color: white; 
-      border: none; 
-      padding: 8px 12px; 
-      border-radius: 5px; 
-      cursor: pointer; 
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    .btn-promo { 
-      background: #4caf50; 
-      color: white; 
-      border: none; 
-      padding: 8px 12px; 
-      border-radius: 5px; 
-      cursor: pointer; 
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    .btn-demote { 
-      background: #2196f3; 
-      color: white; 
-      border: none; 
-      padding: 8px 12px; 
-      border-radius: 5px; 
-      cursor: pointer; 
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    /* --- MODE NUIT ADMIN --- */
+    .user-actions { display: flex; gap: 10px; margin-top: 15px; }
+    .btn-del { background: #ff4444; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .btn-promo { background: #4caf50; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .badge-admin { color: #4caf50; font-weight: bold; text-transform: uppercase; border: 1px solid #4caf50; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+    
+    /* Mode Nuit */
     body.nuit { background-color: #1a1a1a !important; color: white; }
     body.nuit h1 { color: #ffcc80; }
     body.nuit .user-card { background-color: #333; color: #eee; border-left: 5px solid #ffcc80; }
@@ -82,7 +42,7 @@
 
   <h1>Gestion Utilisateurs</h1>
 
-  <div id="user-list">Chargement des comptes...</div>
+  <div id="user-list">Chargement...</div>
 
   <div class="card">
     <button onclick="window.location.href='index.html'">Retour au Dashboard</button>
@@ -109,33 +69,23 @@
 
   let currentAdminUid = "";
 
-  // --- SURVEILLANCE AUTH & THÈME ---
   onAuthStateChanged(auth, async (user) => {
-    if (!user) { 
-      window.location.href = "index.html"; 
-      return; 
-    }
+    if (!user) { window.location.href = "index.html"; return; }
     currentAdminUid = user.uid;
 
     onValue(ref(db, `users/${user.uid}`), (snap) => {
       if (snap.exists()) {
         const userData = snap.val();
-        if (userData.role !== "admin") {
-          window.location.href = "index.html";
-        }
+        if (userData.role !== "admin") { window.location.href = "index.html"; }
         document.body.className = userData.theme || "jour";
-      } else {
-        window.location.href = "index.html";
       }
     });
   });
 
-  // --- AFFICHAGE DE LA LISTE DES UTILISATEURS ---
   onValue(ref(db, "users"), (snapshot) => {
     const users = snapshot.val();
     const container = document.getElementById("user-list");
     container.innerHTML = "";
-
     if (!users) return;
 
     for (let uid in users) {
@@ -143,48 +93,37 @@
       const div = document.createElement("div");
       div.className = "user-card";
       
-      // On empêche l'admin de se modifier lui-même pour éviter les erreurs
       const isSelf = (uid === currentAdminUid);
+      const isAdmin = (u.role === "admin");
 
       div.innerHTML = `
         <p><strong>Email:</strong> ${u.email}</p>
-        <p><strong>Rôle:</strong> <span style="text-transform: uppercase; font-weight: bold; color: ${u.role === 'admin' ? '#4caf50' : '#2196f3'}">${u.role}</span></p>
+        <p><strong>Statut:</strong> ${isAdmin ? '<span class="badge-admin">Administrateur</span>' : '<span>Utilisateur Standard</span>'}</p>
         <div class="user-actions">
-          ${!isSelf && u.role === 'user' ? `<button class="btn-promo" data-id="${uid}">Promouvoir Admin</button>` : ''}
-          ${!isSelf && u.role === 'admin' ? `<button class="btn-demote" data-id="${uid}">Rétrograder User</button>` : ''}
-          ${!isSelf ? `<button class="btn-del" data-id="${uid}">Supprimer</button>` : '<em>(Vous êtes connecté)</em>'}
+          ${isSelf ? '<em>(Votre compte)</em>' : 
+            isAdmin ? '<em>Sécurisé (Aucune action possible)</em>' : 
+            `<button class="btn-promo" data-id="${uid}">Rendre Admin</button>
+             <button class="btn-del" data-id="${uid}">Supprimer le compte</button>`
+          }
         </div>
       `;
       container.appendChild(div);
     }
 
-    // --- ACTIONS ---
-
-    // Promouvoir Admin
+    // Actions
     document.querySelectorAll(".btn-promo").forEach(btn => {
       btn.onclick = () => {
         const id = btn.getAttribute("data-id");
-        if(confirm("Promouvoir cet utilisateur en Administrateur ?")) {
+        if(confirm("Promouvoir ce compte en Administrateur ? Attention : cette action est irréversible via cette interface.")) {
           update(ref(db, `users/${id}`), { role: "admin" });
         }
       };
     });
 
-    // Rétrograder User
-    document.querySelectorAll(".btn-demote").forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.getAttribute("data-id");
-        if(confirm("Rétrograder cet administrateur en simple utilisateur ?")) {
-          update(ref(db, `users/${id}`), { role: "user" });
-        }
-      };
-    });
-
-    // Supprimer
     document.querySelectorAll(".btn-del").forEach(btn => {
       btn.onclick = () => {
         const id = btn.getAttribute("data-id");
-        if(confirm("Supprimer définitivement ce compte de la base ?")) {
+        if(confirm("Supprimer ce compte définitivement ?")) {
           remove(ref(db, `users/${id}`));
         }
       };
