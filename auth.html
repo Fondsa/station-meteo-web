@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Météo - Connexion</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+    body { display: flex; align-items: center; justify-content: center; background-color: #fff3e0; }
+
+    .auth-card { 
+      background: white; padding: 30px; border-radius: 20px; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; 
+      text-align: center; 
+    }
+    h2 { color: #ff8800; margin-bottom: 25px; }
+    input { 
+      width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; 
+      border: 1px solid #ddd; box-sizing: border-box; font-size: 1rem;
+    }
+    .btn { 
+      width: 100%; padding: 14px; border: none; border-radius: 10px; 
+      font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem;
+    }
+    .btn-login { background: #ff8800; color: white; margin-bottom: 10px; }
+    .btn-register { background: white; color: #ff8800; border: 2px solid #ff8800; }
+    
+    .error-msg { color: #d32f2f; font-size: 0.85rem; margin-bottom: 15px; display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card">
+    <h2>☀️ Station Météo</h2>
+    <div id="error" class="error-msg">Identifiants incorrects</div>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Mot de passe">
+    <button id="btn-login" class="btn btn-login">SE CONNECTER</button>
+    <button id="btn-register" class="btn btn-register">CRÉER UN COMPTE</button>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
+  const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getDatabase(app);
+
+  const err = document.getElementById("error");
+
+  // Rediriger si déjà connecté
+  onAuthStateChanged(auth, u => { if(u) window.location.href = "index.html"; });
+
+  // Connexion
+  document.getElementById("btn-login").onclick = () => {
+    signInWithEmailAndPassword(auth, email.value, password.value)
+      .catch(e => { err.style.display = "block"; err.innerText = "Erreur : Compte introuvable."; });
+  };
+
+  // Création de compte
+  document.getElementById("btn-register").onclick = () => {
+    createUserWithEmailAndPassword(auth, email.value, password.value)
+      .then((res) => {
+        set(ref(db, `users/${res.user.uid}`), { 
+          email: email.value, 
+          role: "user", 
+          theme: "jour" 
+        });
+      })
+      .catch(e => { err.style.display = "block"; err.innerText = "Erreur lors de la création."; });
+  };
+</script>
+</body>
+</html>
