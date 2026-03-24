@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Station Météo Automatique</title>
+  <title>Station Météo Pro - Dashboard</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    /* --- STRUCTURE & FOND --- */
     html, body { margin: 0; padding: 0; min-height: 100vh; width: 100%; }
     body {
       padding-top: 80px;
@@ -17,17 +18,23 @@
       background-attachment: fixed;
       transition: background-color 0.3s;
     }
+
+    /* --- TOP BAR --- */
     .top-bar {
       position: fixed; top: 0; left: 0; width: 100%; height: 60px;
       background-color: #ff8800; color: white; display: flex;
       align-items: center; justify-content: space-between; padding: 0 20px;
       box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
+
+    /* --- ICONE MENU (3 TRAITS BLANCS) --- */
     .menu-btn {
       cursor: pointer; display: flex; flex-direction: column; justify-content: space-between;
       width: 35px; height: 22px; background: transparent; border: none; padding: 0; z-index: 1001;
     }
     .menu-btn span { display: block; width: 100%; height: 4px; background-color: #ffffff; border-radius: 4px; }
+
+    /* --- DRAWER (MENU LATÉRAL) --- */
     .drawer {
       height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0;
       background-color: #ffe082; overflow-x: hidden; transition: 0.4s ease;
@@ -38,15 +45,18 @@
       padding: 20px; text-decoration: none; font-size: 18px; color: #333;
       border: none; background: none; text-align: left; width: 100%; cursor: pointer;
     }
-    .close-btn { position: absolute; top: 15px; left: 15px; font-size: 35px; cursor: pointer; }
+    .close-btn { position: absolute; top: 15px; left: 15px; font-size: 35px; cursor: pointer; color: #333; }
     .logout-section { margin-top: auto; border-top: 2px solid #ff8800; }
+
+    /* OVERLAY */
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
-    
-    /* Classes Mode Nuit */
+
+    /* --- MODE NUIT --- */
     body.nuit { background-color: #1a1a1a !important; background-image: none !important; color: white; }
     body.nuit .card { background-color: #333; color: white; border: 1px solid #444; }
     body.nuit .drawer { background-color: #222; }
     body.nuit .drawer a, body.nuit .drawer button { color: #eee; }
+    body.nuit .close-btn { color: #eee; }
   </style>
 </head>
 <body>
@@ -55,14 +65,16 @@
 
   <div class="top-bar" id="top-bar" style="display:none;">
     <span style="font-weight:bold; font-size:1.3rem;">Dashboard Météo</span>
-    <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
+    <button class="menu-btn" id="open-drawer">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 
   <div id="myDrawer" class="drawer">
     <span class="close-btn" id="close-drawer">&times;</span>
     <div class="drawer-content">
       <a href="admin.html" id="admin-link" style="display:none;">🔑 Administration</a>
-      <a href="#">📈 Graphiques</a>
+      <a href="graph.html">📈 Graphiques</a>
       <button id="mode-btn-toggle">🌙 Mode Nuit</button>
       <div class="logout-section">
         <button id="btn-logout" style="color:red; font-weight:bold;">🚪 Déconnexion</button>
@@ -87,14 +99,15 @@
       <p>🏠 Intérieur : <span id="temp-int">--</span> °C | <span id="hum-int">--</span> %</p>
     </div>
     <div class="card">
-      <h2>Relais Extérieur</h2>
+      <h2>Relais / Commandes</h2>
       <button id="btn-lampe">Chargement...</button>
     </div>
   </div>
 
 <script type="module">
+  // Importations Firebase
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getDatabase, ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { getDatabase, ref, onValue, get, set, update, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -111,6 +124,7 @@
   const db = getDatabase(app);
   const auth = getAuth(app);
 
+  // --- LOGIQUE TIROIR (DRAWER) ---
   const drawer = document.getElementById("myDrawer");
   const overlay = document.getElementById("overlay");
   const openNav = () => { drawer.style.width = "250px"; overlay.style.display = "block"; };
@@ -120,7 +134,7 @@
   document.getElementById("close-drawer").onclick = closeNav;
   overlay.onclick = closeNav;
 
-  // --- LOGIQUE AUTHENTIFICATION ---
+  // --- AUTHENTIFICATION ---
   document.getElementById("btn-login").onclick = () => {
     signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("password").value)
       .catch(err => alert("Erreur: " + err.message));
@@ -133,14 +147,18 @@
       await set(ref(db, 'users/' + res.user.uid), { 
         email: e, 
         role: "user",
-        theme: "jour" // Thème par défaut à la création
+        theme: "jour"
       });
     } catch (err) { alert(err.message); }
   };
 
   document.getElementById("btn-logout").onclick = () => { signOut(auth); closeNav(); };
 
-  // --- SURVEILLANCE ÉTAT CONNEXION ---
+  // --- VARIABLES POUR L'ENREGISTREUR ---
+  let dernierEnregistrement = 0;
+  let intervalleMinutes = 5;
+
+  // --- SURVEILLANCE CONNEXION & PARAMÈTRES ---
   onAuthStateChanged(auth, async (user) => {
     const adminLink = document.getElementById("admin-link");
     if (user) {
@@ -148,20 +166,22 @@
       document.getElementById("main-content").style.display = "flex";
       document.getElementById("top-bar").style.display = "flex";
       
-      // Récupération automatique du rôle et du thème
+      // Écoute du profil utilisateur (Rôle + Thème)
       onValue(ref(db, `users/${user.uid}`), (snap) => {
         if (snap.exists()) {
           const userData = snap.val();
-          
-          // Gestion Admin
           adminLink.style.display = (userData.role === "admin") ? "block" : "none";
-          
-          // Gestion Thème Automatique
-          const currentTheme = userData.theme || "jour";
-          document.body.className = currentTheme;
-          document.getElementById("mode-btn-toggle").textContent = (currentTheme === "jour") ? "🌙 Mode Nuit" : "☀️ Mode Jour";
+          const theme = userData.theme || "jour";
+          document.body.className = theme;
+          document.getElementById("mode-btn-toggle").textContent = (theme === "jour") ? "🌙 Mode Nuit" : "☀️ Mode Jour";
         }
       });
+
+      // Écoute de la config de l'intervalle pour l'historique
+      onValue(ref(db, "config/intervalle"), (s) => {
+        intervalleMinutes = s.val() || 5;
+      });
+
     } else {
       document.getElementById("auth-section").style.display = "flex";
       document.getElementById("main-content").style.display = "none";
@@ -171,7 +191,7 @@
     }
   });
 
-  // --- BOUTON THEME (SAUVEGARDE DB) ---
+  // --- BOUTON CHANGEMENT THÈME (SYNCHRONISÉ) ---
   document.getElementById("mode-btn-toggle").onclick = async () => {
     const user = auth.currentUser;
     if (user) {
@@ -182,7 +202,29 @@
     }
   };
 
-  // --- DONNÉES CAPTEURS & LAMPE ---
+  // --- ENREGISTREUR D'HISTORIQUE ---
+  const enregistrerPoint = async (data) => {
+    const maintenant = Date.now();
+    const delaiMs = intervalleMinutes * 60 * 1000;
+
+    if (maintenant - dernierEnregistrement >= delaiMs) {
+      const horodatage = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const nouveauPoint = {
+        temps: horodatage,
+        tempExt: data.exterieur?.temperature || 0,
+        humExt: data.exterieur?.humidite || 0,
+        tempInt: data.interieur?.temperature || 0,
+        humInt: data.interieur?.humidite || 0,
+        timestamp: maintenant
+      };
+      try {
+        await push(ref(db, "historique"), nouveauPoint);
+        dernierEnregistrement = maintenant;
+      } catch (e) { console.error(e); }
+    }
+  };
+
+  // --- RÉCUPÉRATION DONNÉES CAPTEURS ---
   onValue(ref(db, "capteurs"), s => {
     const d = s.val();
     if(d) {
@@ -190,17 +232,21 @@
       document.getElementById("hum-ext").textContent = d.exterieur?.humidite ?? "--";
       document.getElementById("temp-int").textContent = d.interieur?.temperature ?? "--";
       document.getElementById("hum-int").textContent = d.interieur?.humidite ?? "--";
+      
+      // On tente d'enregistrer un point si l'intervalle est respecté
+      enregistrerPoint(d);
     }
   });
 
+  // --- COMMANDE LAMPE ---
   onValue(ref(db, "commande/lampe"), s => {
     document.getElementById("btn-lampe").textContent = s.val() ? "Éteindre Lampe" : "Allumer Lampe";
   });
-  
   document.getElementById("btn-lampe").onclick = async () => {
     const s = await get(ref(db, "commande/lampe"));
     set(ref(db, "commande/lampe"), !s.val());
   };
+
 </script>
 </body>
 </html>
