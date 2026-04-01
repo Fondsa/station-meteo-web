@@ -11,93 +11,44 @@
     body { display: flex; flex-direction: column; background-color: #fff3e0; transition: 0.3s; padding-top: 60px; box-sizing: border-box; }
 
     /* --- TOP BAR --- */
-    .top-bar { 
-      position: fixed; top: 0; left: 0; width: 100%; height: 60px; 
-      background-color: #ff8800; color: white; display: flex; 
-      align-items: center; justify-content: space-between; 
-      padding: 0 20px; box-sizing: border-box; z-index: 1000; 
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
-    }
-    .menu-btn { 
-      cursor: pointer; display: flex; flex-direction: column; 
-      justify-content: space-between; width: 28px; height: 18px; 
-      background: transparent; border: none; padding: 0; 
-    }
+    .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background-color: #ff8800; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .menu-btn { cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 28px; height: 18px; background: transparent; border: none; padding: 0; }
     .menu-btn span { display: block; width: 100%; height: 3px; background-color: #fff; border-radius: 4px; }
 
-    /* --- DRAWER (Menu en Cartes) --- */
+    /* --- DRAWER --- */
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
-    .drawer { 
-      height: 100%; width: 0; position: fixed; z-index: 2000; 
-      top: 0; right: 0; background-color: #f8f9fa; 
-      overflow-x: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-      box-shadow: -5px 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; 
-    }
+    .drawer { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; right: 0; background-color: #f8f9fa; overflow-x: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -5px 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
     .drawer-content { flex: 1; display: flex; flex-direction: column; padding: 80px 15px 20px 15px; gap: 12px; width: 280px; box-sizing: border-box; }
-    
-    .menu-card { 
-      background: white; padding: 15px; border-radius: 12px; 
-      text-decoration: none; color: #333; font-weight: bold; 
-      display: flex; align-items: center; gap: 15px; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border: 1px solid transparent; 
-    }
-    .menu-card:hover { border-color: #ff8800; transform: translateY(-2px); }
-    
+    .menu-card { background: white; padding: 15px; border-radius: 12px; text-decoration: none; color: #333; font-weight: bold; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border: 1px solid transparent; }
     .logout-container { padding: 20px 15px; border-top: 1px solid #eee; }
-    .btn-logout { 
-      width: 100%; background: #fee; color: #d32f2f; border: 1px solid #ffcdd2; 
-      padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; 
-      display: flex; align-items: center; justify-content: center; gap: 10px; 
-    }
+    .btn-logout { width: 100%; background: #fee; color: #d32f2f; border: 1px solid #ffcdd2; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
     /* --- LAYOUT CONTENU --- */
-    .main-layout { 
-      flex: 1; display: flex; flex-direction: column; padding: 15px; 
-      gap: 15px; box-sizing: border-box; max-width: 1400px; 
-      margin: 0 auto; width: 100%; height: calc(100vh - 60px); 
-    }
-    .config-panel { 
-      background: white; padding: 15px; border-radius: 12px; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; 
-      flex-direction: column; gap: 10px; align-items: center; 
-    }
-    .chart-container { 
-      flex: 1; background: white; padding: 15px; border-radius: 15px; 
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 0; 
-    }
+    .main-layout { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; box-sizing: border-box; max-width: 1400px; margin: 0 auto; width: 100%; height: calc(100vh - 60px); }
+    .config-panel { background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 10px; align-items: center; }
+    .chart-container { flex: 1; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 0; position: relative; }
     
-    /* Filtres et Fréquence */
-    .time-filters { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-    .time-filters button { 
-      padding: 6px 14px; border: 2px solid #ff8800; background: white; 
-      color: #ff8800; cursor: pointer; border-radius: 20px; font-weight: bold; font-size: 0.85rem; 
-    }
+    /* Message "Pas de données" */
+    #no-data-msg { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #888; font-weight: bold; text-align: center; pointer-events: none; }
+
+    /* Filtres */
+    .time-filters { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+    .time-filters button { padding: 6px 12px; border: 2px solid #ff8800; background: white; color: #ff8800; cursor: pointer; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
     .time-filters button.active { background: #ff8800; color: white; }
 
-    @media (min-width: 1024px) { 
-      .config-panel { flex-direction: row; justify-content: space-between; padding: 10px 30px; } 
-    }
-
-    /* --- MODE NUIT (Harmonisé Dashboard) --- */
+    /* Mode Nuit */
     body.nuit { background-color: #1a1a1a !important; color: white; }
     body.nuit .config-panel, body.nuit .chart-container { background-color: #2c2c2c; color: white; border: 1px solid #444; }
     body.nuit .drawer { background-color: #222; }
-    body.nuit .menu-card { background-color: #333; color: white; box-shadow: none; border-color: #444; }
-    body.nuit .menu-card:hover { border-color: #ff8800; }
-    
-    body.nuit .logout-container { border-color: #444; }
-    body.nuit .btn-logout { 
-      background: #311; 
-      border-color: #522; 
-      color: #ff8080; 
-    }
+    body.nuit .menu-card { background-color: #333; color: white; border-color: #444; }
+    body.nuit .btn-logout { background: #311; border-color: #522; color: #ff8080; }
   </style>
 </head>
 <body>
 
   <div id="overlay"></div>
   <div class="top-bar">
-    <span style="font-weight:bold; font-size:1.2rem;">📊 Analyses</span>
+    <span style="font-weight:bold; font-size:1.1rem;">📊 Analyses</span>
     <button class="menu-btn" id="open-drawer"><span></span><span></span><span></span></button>
   </div>
 
@@ -107,9 +58,7 @@
       <a href="admin.html" id="admin-link" class="menu-card" style="display:none;"><span>🔑</span> Administration</a>
       <button id="mode-btn-toggle" class="menu-card" style="width:100%; border:none; cursor:pointer; font-family:inherit;"><span>🌙</span> Mode Nuit</button>
     </div>
-    <div class="logout-container">
-      <button id="btn-logout" class="btn-logout">🚪 Déconnexion</button>
-    </div>
+    <div class="logout-container"><button id="btn-logout" class="btn-logout">🚪 Déconnexion</button></div>
   </div>
 
   <div class="main-layout">
@@ -118,16 +67,18 @@
         <button data-ms="3600000">1H</button>
         <button data-ms="86400000">1J</button>
         <button data-ms="2592000000">1M</button>
+        <button data-ms="31536000000">1 AN</button>
         <button data-ms="0" class="active">TOUT</button>
       </div>
-      <div style="display:flex; align-items:center; gap:10px; font-size:0.9rem;">
+      <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem;">
         <span>Fréquence: <b id="current-active-val" style="color:#ff8800;">--</b></span>
-        <input type="range" id="interval-range" min="10" max="600" step="10" style="accent-color:#ff8800; width:120px;">
-        <span id="interval-preview-val" style="font-weight:bold; width:40px;">--</span>
-        <button id="btn-validate-interval" style="background:#4caf50; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">OK</button>
+        <input type="range" id="interval-range" min="10" max="600" step="10" style="accent-color:#ff8800; width:100px;">
+        <span id="interval-preview-val" style="font-weight:bold;">--</span>
+        <button id="btn-validate-interval" style="background:#4caf50; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-weight:bold;">OK</button>
       </div>
     </div>
     <div class="chart-container">
+      <div id="no-data-msg">🚫 Pas de donnée sur la plage sélectionnée</div>
       <canvas id="mainChart"></canvas>
     </div>
   </div>
@@ -140,67 +91,94 @@
   const firebaseConfig = { apiKey: "AIzaSyBw417roqkibO6kPgsrx2T77aquDXMHSMA", authDomain: "projetfakirradio.firebaseapp.com", databaseURL: "https://projetfakirradio-default-rtdb.europe-west1.firebasedatabase.app", projectId: "projetfakirradio" };
   const app = initializeApp(firebaseConfig), db = getDatabase(app), auth = getAuth(app);
 
-  // --- DRAWER ---
-  const dr = document.getElementById("myDrawer"), ov = document.getElementById("overlay");
+  const dr = document.getElementById("myDrawer"), ov = document.getElementById("overlay"), noData = document.getElementById("no-data-msg");
+
   document.getElementById("open-drawer").onclick = () => { dr.style.width = "280px"; ov.style.display = "block"; };
   ov.onclick = () => { dr.style.width = "0"; ov.style.display = "none"; };
 
-  // --- CHART ---
   const ctx = document.getElementById('mainChart').getContext('2d');
   const mainChart = new Chart(ctx, {
     type: 'line',
     data: { labels: [], datasets: [
-      { label: 'Temp Ext', data: [], borderColor: '#ff8800', tension: 0.3, yAxisID: 'y' },
-      { label: 'Hum Ext', data: [], borderColor: '#3498db', tension: 0.3, yAxisID: 'y1' },
-      { label: 'Temp Int', data: [], borderColor: '#e74c3c', tension: 0.3, yAxisID: 'y' },
-      { label: 'Hum Int', data: [], borderColor: '#2ecc71', tension: 0.3, yAxisID: 'y1' }
+      { label: 'Temp Ext (°C)', data: [], borderColor: '#ff8800', tension: 0.3, yAxisID: 'y' },
+      { label: 'Hum Ext (%)', data: [], borderColor: '#3498db', tension: 0.3, yAxisID: 'y1' },
+      { label: 'Temp Int (°C)', data: [], borderColor: '#e74c3c', tension: 0.3, yAxisID: 'y' },
+      { label: 'Hum Int (%)', data: [], borderColor: '#2ecc71', tension: 0.3, yAxisID: 'y1' }
     ]},
     options: { 
       responsive: true, maintainAspectRatio: false, 
-      scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } } 
+      scales: { 
+        y: { type: 'linear', position: 'left', title: { display: true, text: 'Température' } }, 
+        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Humidité' } } 
+      },
+      plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } }
     }
   });
 
-  const formatF = (s) => s < 60 ? s+"s" : Math.floor(s/60)+"m"+(s%60||"");
   let unsub = null;
 
-  function load(ms) {
+  function loadData(ms) {
     if (unsub) unsub();
-    let q = ms === 0 ? query(ref(db, "historique"), orderByChild("timestamp")) : query(ref(db, "historique"), orderByChild("timestamp"), startAt(Date.now() - ms));
+    let historyRef = ref(db, "historique");
+    let q = ms === 0 ? query(historyRef, orderByChild("timestamp")) : query(historyRef, orderByChild("timestamp"), startAt(Date.now() - ms));
+
     unsub = onValue(q, (snap) => {
-      const d = snap.val(); if (!d) return;
+      const data = snap.val();
+      if (!data) {
+        clearChart();
+        return;
+      }
+      const sortedKeys = Object.keys(data).sort((a,b) => data[a].timestamp - data[b].timestamp);
+      
+      if(sortedKeys.length === 0) {
+        clearChart();
+        return;
+      }
+
       const l = [], te = [], he = [], ti = [], hi = [];
-      Object.keys(d).sort((a,b) => d[a].timestamp - d[b].timestamp).forEach(k => {
-        l.push(d[k].temps); te.push(d[k].tempExt); he.push(d[k].humExt); ti.push(d[k].tempInt); hi.push(d[k].humInt);
+      sortedKeys.forEach(k => {
+        const item = data[k];
+        l.push(item.temps || ""); 
+        te.push(item.tempExt); he.push(item.humExt); 
+        ti.push(item.tempInt); hi.push(item.humInt);
       });
-      mainChart.data.labels = l; mainChart.data.datasets[0].data = te; mainChart.data.datasets[1].data = he;
-      mainChart.data.datasets[2].data = ti; mainChart.data.datasets[3].data = hi; mainChart.update();
+
+      noData.style.display = "none";
+      mainChart.data.labels = l;
+      mainChart.data.datasets[0].data = te; mainChart.data.datasets[1].data = he;
+      mainChart.data.datasets[2].data = ti; mainChart.data.datasets[3].data = hi;
+      mainChart.update();
     });
   }
 
+  function clearChart() {
+    mainChart.data.labels = [];
+    mainChart.data.datasets.forEach(ds => ds.data = []);
+    mainChart.update();
+    noData.style.display = "block";
+  }
+
   onAuthStateChanged(auth, u => {
-    if (!u) {
-      window.location.href = "index.html";
-    } else {
+    if (!u) { window.location.href = "auth.html"; } 
+    else {
       onValue(ref(db, `users/${u.uid}`), (s) => { 
-        if(s.exists()){ 
-          document.body.className = s.val().theme; 
-          document.getElementById("admin-link").style.display = s.val().role === "admin" ? "flex" : "none"; 
-        } 
+        if(!s.exists()) { signOut(auth); return; }
+        document.body.className = s.val().theme; 
+        document.getElementById("admin-link").style.display = s.val().role === "admin" ? "flex" : "none"; 
       });
-      load(0);
+      loadData(0); // Charge TOUT par défaut au démarrage
     }
   });
 
-  // --- ACTIONS ---
   document.getElementById('filters').onclick = (e) => { 
     if (e.target.tagName === 'BUTTON') {
       document.querySelectorAll('#filters button').forEach(b => b.classList.remove('active'));
       e.target.classList.add('active');
-      load(parseInt(e.target.dataset.ms)); 
+      loadData(parseInt(e.target.dataset.ms)); 
     }
   };
 
+  const formatF = (s) => s < 60 ? s+"s" : Math.floor(s/60)+"m"+(s%60||"");
   const range = document.getElementById('interval-range'), preview = document.getElementById('interval-preview-val'), activeDisp = document.getElementById('current-active-val');
   onValue(ref(db, "config/intervalle_sec"), (s) => { activeDisp.textContent = formatF(s.val()); range.value = s.val(); preview.textContent = formatF(s.val()); });
   range.oninput = () => preview.textContent = formatF(parseInt(range.value));
